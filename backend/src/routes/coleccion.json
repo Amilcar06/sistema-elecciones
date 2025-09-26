@@ -1,0 +1,368 @@
+{
+  "info": {
+    "name": "Elecciones Backend",
+    "_postman_id": "b1e1e1e1-1234-5678-9101-abcdefabcdef",
+    "description": "Colección para probar el backend de elecciones",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Elecciones",
+      "item": [
+        {
+          "name": "Listar elecciones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:3001/elecciones", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["elecciones"] }
+          }
+        },
+        {
+          "name": "Crear elección",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Elección 2025\",\n  \"descripcion\": \"Elección general nacional\",\n  \"fecha\": \"2025-09-13\",\n  \"anio\": 2025,\n  \"estado\": \"activa\"\n}"
+            },
+            "url": { "raw": "http://localhost:3001/elecciones", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["elecciones"] }
+          }
+        },
+        {
+          "name": "Obtener elección por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:3001/elecciones/1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["elecciones", "1"] }
+          }
+        },
+        {
+          "name": "Actualizar elección",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Elección 2025 Modificada\",\n  \"descripcion\": \"Descripción actualizada\",\n  \"fecha\": \"2025-09-14\",\n  \"anio\": 2025,\n  \"estado\": \"finalizada\"\n}"
+            },
+            "url": { "raw": "http://localhost:3001/elecciones/1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["elecciones", "1"] }
+          }
+        },
+        {
+          "name": "Eliminar elección",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "http://localhost:3001/elecciones/1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["elecciones", "1"] }
+          }
+        }
+      ]
+    },
+    {
+    "name": "CatalogoCargo",
+    "item": [
+        {
+            "name": "Listar catalogos",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": { "raw": "http://localhost:3001/catalogo-cargo", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["catalogo-cargo"] }
+            }
+            },
+            {
+            "name": "Crear catalogo",
+            "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                "mode": "raw",
+                "raw": "{\n  \"nombre\": \"Presidente\",\n  \"descripcion\": \"Cargo presidencial\"\n}"
+                },
+                "url": { "raw": "http://localhost:3001/catalogo-cargo", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["catalogo-cargo"] }
+            }
+            },
+            {
+            "name": "Obtener catalogo por ID",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": { "raw": "http://localhost:3001/catalogo-cargo/1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["catalogo-cargo", "1"] }
+            }
+            },
+            {
+            "name": "Actualizar catalogo",
+            "request": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                "mode": "raw",
+                "raw": "{\n  \"nombre\": \"Presidente Modificado\",\n  \"descripcion\": \"Cargo presidencial actualizado\"\n}"
+                },
+                "url": { "raw": "http://localhost:3001/catalogo-cargo/1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["catalogo-cargo", "1"] }
+            }
+            },
+            {
+            "name": "Eliminar catalogo",
+            "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": { "raw": "http://localhost:3001/catalogo-cargo/1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["catalogo-cargo", "1"] }
+            }
+            }
+        ]
+    },
+    {
+      "name": "Cargos",
+      "item": [
+        {
+          "name": "Listar cargos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:3001/cargos", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["cargos"] }
+          }
+        },
+        {
+          "name": "Listar cargos por elección",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:3001/cargos?eleccionId=1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["cargos"], "query": [{ "key": "eleccionId", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Crear cargo",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_eleccion\": 1,\n  \"id_catalogo\": 1,\n  \"nombre_visible\": \"Presidente\",\n  \"estado\": \"activo\",\n  \"orden\": 1\n}"
+            },
+            "url": { "raw": "http://localhost:3001/cargos", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["cargos"] }
+          }
+        },
+        {
+          "name": "Obtener cargo por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:3001/cargos/1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["cargos", "1"] }
+          }
+        },
+        {
+          "name": "Actualizar cargo",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_eleccion\": 1,\n  \"id_catalogo\": 1,\n  \"nombre_visible\": \"Presidente Modificado\",\n  \"estado\": \"inactivo\",\n  \"orden\": 2\n}"
+            },
+            "url": { "raw": "http://localhost:3001/cargos/1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["cargos", "1"] }
+          }
+        },
+        {
+          "name": "Eliminar cargo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "http://localhost:3001/cargos/1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["cargos", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Candidatos",
+      "item": [
+        {
+          "name": "Listar candidatos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:3001/candidatos", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["candidatos"] }
+          }
+        },
+        {
+          "name": "Listar candidatos por cargo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:3001/candidatos?cargoId=1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["candidatos"], "query": [{ "key": "cargoId", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Crear candidato",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_cargo\": 1,\n  \"nombre_completo\": \"Juan Pérez\",\n  \"activo\": true\n}"
+            },
+            "url": { "raw": "http://localhost:3001/candidatos", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["candidatos"] }
+          }
+        },
+        {
+          "name": "Obtener candidato por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:3001/candidatos/1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["candidatos", "1"] }
+          }
+        },
+        {
+          "name": "Actualizar candidato",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_cargo\": 1,\n  \"nombre_completo\": \"Juan Pérez Modificado\",\n  \"activo\": false\n}"
+            },
+            "url": { "raw": "http://localhost:3001/candidatos/1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["candidatos", "1"] }
+          }
+        },
+        {
+          "name": "Eliminar candidato",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "http://localhost:3001/candidatos/1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["candidatos", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rondas",
+      "item": [
+        {
+          "name": "Listar rondas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:3001/rondas", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["rondas"] }
+          }
+        },
+        {
+          "name": "Listar rondas por cargo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:3001/rondas?cargoId=1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["rondas"], "query": [{ "key": "cargoId", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Crear ronda",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_cargo\": 1,\n  \"numero_ronda\": 1,\n  \"fecha\": \"2025-09-13\"\n}"
+            },
+            "url": { "raw": "http://localhost:3001/rondas", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["rondas"] }
+          }
+        },
+        {
+          "name": "Obtener ronda por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:3001/rondas/1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["rondas", "1"] }
+          }
+        },
+        {
+          "name": "Actualizar ronda",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_cargo\": 1,\n  \"numero_ronda\": 2,\n  \"fecha\": \"2025-09-14\"\n}"
+            },
+            "url": { "raw": "http://localhost:3001/rondas/1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["rondas", "1"] }
+          }
+        },
+        {
+          "name": "Eliminar ronda",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "http://localhost:3001/rondas/1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["rondas", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Resultados",
+      "item": [
+        {
+          "name": "Listar resultados",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:3001/resultados", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["resultados"] }
+          }
+        },
+        {
+          "name": "Listar resultados por ronda",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:3001/resultados?rondaId=1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["resultados"], "query": [{ "key": "rondaId", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Listar resultados por candidato",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:3001/resultados?candidatoId=1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["resultados"], "query": [{ "key": "candidatoId", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Crear resultado",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_ronda\": 1,\n  \"id_candidato\": 1,\n  \"votos\": 100,\n  \"registrado_por\": \"admin\"\n}"
+            },
+            "url": { "raw": "http://localhost:3001/resultados", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["resultados"] }
+          }
+        },
+        {
+          "name": "Obtener resultado por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://localhost:3001/resultados/1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["resultados", "1"] }
+          }
+        },
+        {
+          "name": "Actualizar resultado",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_ronda\": 1,\n  \"id_candidato\": 1,\n  \"votos\": 150,\n  \"registrado_por\": \"admin2\"\n}"
+            },
+            "url": { "raw": "http://localhost:3001/resultados/1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["resultados", "1"] }
+          }
+        },
+        {
+          "name": "Eliminar resultado",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "http://localhost:3001/resultados/1", "protocol": "http", "host": ["localhost"], "port": "3001", "path": ["resultados", "1"] }
+          }
+        }
+      ]
+    }
+  ]
+}

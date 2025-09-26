@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  # Base de datos MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: elecciones_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: elecciones_academicas
+      MYSQL_USER: elecciones_user
+      MYSQL_PASSWORD: elecciones_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - elecciones_network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: elecciones_backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: "mysql://elecciones_user:elecciones_password@mysql:3306/elecciones_academicas"
+      PORT: 3001
+      NODE_ENV: development
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mysql
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - elecciones_network
+    command: npm run dev
+
+  # Frontend React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: elecciones_frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: "http://localhost:3001/api"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - elecciones_network
+    command: npm run dev
+
+volumes:
+  mysql_data:
+
+networks:
+  elecciones_network:
+    driver: bridge
