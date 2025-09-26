@@ -220,7 +220,7 @@ Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) par
 
 ## 👥 Autores
 
-- **Tu Nombre** - *Desarrollo inicial* - [tu-github](https://github.com/tu-usuario)
+- **Amilcar Josias Yujra Chipana** - *Desarrollo inicial* - [tu-github](https://github.com/Amilcar06)
 
 ## 🙏 Agradecimientos
 
