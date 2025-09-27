@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import prisma from "../prisma";
 
 const router = Router();
@@ -7,7 +7,7 @@ const router = Router();
  * GET /api/rondas/cargos/:idCargo
  * Listar rondas de un cargo
  */
-router.get("/cargos/:idCargo", async (req, res) => {
+router.get("/cargos/:idCargo", async (req: Request, res: Response) => {
   try {
     const { idCargo } = req.params;
     const rondas = await prisma.ronda.findMany({
@@ -24,7 +24,7 @@ router.get("/cargos/:idCargo", async (req, res) => {
  * POST /api/rondas/cargos/:idCargo
  * Crear nueva ronda
  */
-router.post("/cargos/:idCargo", async (req, res) => {
+router.post("/cargos/:idCargo", async (req: Request, res: Response) => {
   try {
     const { idCargo } = req.params;
     const { numero, observaciones } = req.body;
@@ -55,7 +55,7 @@ router.post("/cargos/:idCargo", async (req, res) => {
  * PUT /api/rondas/:id
  * Actualizar ronda (ej. marcar finalizada, editar observaciones)
  */
-router.put("/:id", async (req, res) => {
+router.put("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { finalizada, observaciones } = req.body;
@@ -78,7 +78,7 @@ router.put("/:id", async (req, res) => {
  * DELETE /api/rondas/:id
  * Eliminar ronda (si no hay resultados asociados)
  */
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 

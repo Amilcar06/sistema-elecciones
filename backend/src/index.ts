@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import cors from "cors";
 
 import eleccionesRouter from "./routes/elecciones";
@@ -15,7 +15,7 @@ app.use(cors());
 app.use(express.json());
 
 // Health check
-app.get("/api/health", (req, res) => res.send("Backend funcionando"));
+app.get("/api/health", (req: Request, res: Response) => res.send("Backend funcionando"));
 
 // Prefijo /api en todas las rutas
 app.use("/api/elecciones", eleccionesRouter);

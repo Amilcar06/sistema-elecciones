@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import prisma from "../prisma";
 
 const router = Router();
@@ -7,7 +7,7 @@ const router = Router();
  * GET /api/publicaciones
  * Listar todas las publicaciones
  */
-router.get("/", async (req, res) => {
+router.get("/", async (req: Request, res: Response) => {
   try {
     const publicaciones = await prisma.publicacionResultado.findMany({
       include: {
@@ -28,7 +28,7 @@ router.get("/", async (req, res) => {
  * GET /api/publicaciones/:id
  * Obtener una publicación específica
  */
-router.get("/:id", async (req, res) => {
+router.get("/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     const publicacion = await prisma.publicacionResultado.findUnique({
@@ -52,7 +52,7 @@ router.get("/:id", async (req, res) => {
  * POST /api/publicaciones
  * Registrar nueva publicación
  */
-router.post("/", async (req, res) => {
+router.post("/", async (req: Request, res: Response) => {
   try {
     const { id_eleccion, nota, publicado_por, modo = 'PROYECTOR' } = req.body;
 
@@ -82,7 +82,7 @@ router.post("/", async (req, res) => {
  * PUT /api/publicaciones/:id
  * Actualizar publicación
  */
-router.put("/:id", async (req, res) => {
+router.put("/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
   const { nota, publicado_por, modo } = req.body;
 
@@ -112,7 +112,7 @@ router.put("/:id", async (req, res) => {
  * DELETE /api/publicaciones/:id
  * Eliminar publicación
  */
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     await prisma.publicacionResultado.delete({
@@ -131,7 +131,7 @@ router.delete("/:id", async (req, res) => {
  * GET /api/elecciones/:id/publicaciones
  * Obtener publicaciones de una elección específica
  */
-router.get("/elecciones/:id/publicaciones", async (req, res) => {
+router.get("/elecciones/:id/publicaciones", async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     const publicaciones = await prisma.publicacionResultado.findMany({

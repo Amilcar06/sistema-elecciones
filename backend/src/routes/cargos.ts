@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import prisma from "../prisma";
 
 const router = Router();
@@ -7,7 +7,7 @@ const router = Router();
  * GET /api/cargos
  * Listar cargos con filtros opcionales
  */
-router.get("/", async (req, res) => {
+router.get("/", async (req: Request, res: Response) => {
   try {
     const { id_eleccion, estado } = req.query;
     
@@ -36,7 +36,7 @@ router.get("/", async (req, res) => {
  * GET /api/cargos/:id
  * Obtener un cargo específico
  */
-router.get("/:id", async (req, res) => {
+router.get("/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     const cargo = await prisma.cargo.findUnique({
@@ -64,7 +64,7 @@ router.get("/:id", async (req, res) => {
  * POST /api/cargos
  * Crear nuevo cargo en una elección
  */
-router.post("/", async (req, res) => {
+router.post("/", async (req: Request, res: Response) => {
   try {
     const { id_eleccion, id_catalogo, orden, estado } = req.body;
 
@@ -103,7 +103,7 @@ router.post("/", async (req, res) => {
  * PUT /api/cargos/:id
  * Actualizar cargo
  */
-router.put("/:id", async (req, res) => {
+router.put("/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
   const { estado, orden } = req.body;
 
@@ -136,7 +136,7 @@ router.put("/:id", async (req, res) => {
  * DELETE /api/cargos/:id
  * Eliminar cargo
  */
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     await prisma.cargo.delete({

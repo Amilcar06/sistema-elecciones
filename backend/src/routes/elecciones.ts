@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import prisma from "../prisma";
 
 const router = Router();
@@ -8,7 +8,7 @@ const router = Router();
  * Resumen desde vista v_elecciones_resumen
  * REVISAR PORQUE NO SIRVE
  */
-router.get("/resumen/lista", async (_, res) => {
+router.get("/resumen/lista", async (_: Request, res: Response) => {
   try {
     const resumen = await prisma.$queryRawUnsafe(
       `SELECT 
@@ -36,7 +36,7 @@ router.get("/resumen/lista", async (_, res) => {
  * GET /api/elecciones
  * Listar elecciones (con filtros opcionales: estado, anio)
  */
-router.get("/", async (req, res) => {
+router.get("/", async (req: Request, res: Response) => {
   try {
     const { estado, anio } = req.query;
 
@@ -83,7 +83,7 @@ router.get("/", async (req, res) => {
  * GET /api/elecciones/:id
  * Obtener detalle de una elección
  */
-router.get("/:id", async (req, res) => {
+router.get("/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     const eleccion = await prisma.eleccion.findUnique({
@@ -103,7 +103,7 @@ router.get("/:id", async (req, res) => {
  * POST /api/elecciones
  * Crear nueva elección
  */
-router.post("/", async (req, res) => {
+router.post("/", async (req: Request, res: Response) => {
   try {
     const { nombre, descripcion, fecha, anio } = req.body;
 
@@ -133,7 +133,7 @@ router.post("/", async (req, res) => {
  * PUT /api/elecciones/:id
  * Actualizar elección
  */
-router.put("/:id", async (req, res) => {
+router.put("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { nombre, descripcion } = req.body;
@@ -157,7 +157,7 @@ router.put("/:id", async (req, res) => {
  * DELETE /api/elecciones/:id
  * Eliminar elección
  */
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     await prisma.eleccion.delete({
@@ -173,7 +173,7 @@ router.delete("/:id", async (req, res) => {
  * PATCH /api/elecciones/:id/estado
  * Cambiar estado de elección
  */
-router.patch("/:id/estado", async (req, res) => {
+router.patch("/:id/estado", async (req: Request, res: Response) => {
   const { id } = req.params;
   const { estado } = req.body;
 
@@ -197,7 +197,7 @@ router.patch("/:id/estado", async (req, res) => {
  * GET /api/elecciones/:id/resultados-publicos
  * Obtener resultados para pantalla pública/proyector
  */
-router.get("/:id/resultados-publicos", async (req, res) => {
+router.get("/:id/resultados-publicos", async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     const eleccion = await prisma.eleccion.findUnique({
@@ -239,7 +239,7 @@ router.get("/:id/resultados-publicos", async (req, res) => {
  * GET /api/elecciones/:id/resumen-final
  * Obtener resumen final con todos los ganadores
  */
-router.get("/:id/resumen-final", async (req, res) => {
+router.get("/:id/resumen-final", async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     const resumen = await prisma.$queryRawUnsafe(`
@@ -287,7 +287,7 @@ router.get("/:id/resumen-final", async (req, res) => {
  * POST /api/elecciones/:id/generar-reporte
  * Generar reporte de la elección
  */
-router.post("/:id/generar-reporte", async (req, res) => {
+router.post("/:id/generar-reporte", async (req: Request, res: Response) => {
   const { id } = req.params;
   const { formato = 'pdf', incluir_detalles = true } = req.body;
   

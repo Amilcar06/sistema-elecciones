@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import prisma from "../prisma";
 
 const router = Router();
@@ -7,7 +7,7 @@ const router = Router();
  * GET /api/resultados/rondas/:idRonda
  * Listar resultados de una ronda
  */
-router.get("/rondas/:idRonda", async (req, res) => {
+router.get("/rondas/:idRonda", async (req: Request, res: Response) => {
   try {
     const { idRonda } = req.params;
     const resultados = await prisma.resultado.findMany({
@@ -26,7 +26,7 @@ router.get("/rondas/:idRonda", async (req, res) => {
  * Registrar votos de varios candidatos en la ronda
  * body: [ { id_candidato, votos } ]
  */
-router.post("/rondas/:idRonda", async (req, res) => {
+router.post("/rondas/:idRonda", async (req: Request, res: Response) => {
   try {
     const { idRonda } = req.params;
     const resultados: { id_candidato: number; votos: number }[] = req.body;
@@ -53,7 +53,7 @@ router.post("/rondas/:idRonda", async (req, res) => {
  * PUT /api/resultados/:id
  * Actualizar votos de un resultado
  */
-router.put("/:id", async (req, res) => {
+router.put("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { votos } = req.body;
@@ -73,7 +73,7 @@ router.put("/:id", async (req, res) => {
  * DELETE /api/resultados/:id
  * Eliminar resultado
  */
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -91,7 +91,7 @@ router.delete("/:id", async (req, res) => {
  * GET /api/rondas/:id/ganador
  * Obtener ganador de la ronda (función SQL)
  */
-router.get("/rondas/:id/ganador", async (req, res) => {
+router.get("/rondas/:id/ganador", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const [result] = await prisma.$queryRawUnsafe<any[]>(
@@ -107,7 +107,7 @@ router.get("/rondas/:id/ganador", async (req, res) => {
  * GET /api/rondas/:id/empate
  * Verificar si hubo empate (función SQL)
  */
-router.get("/rondas/:id/empate", async (req, res) => {
+router.get("/rondas/:id/empate", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const [result] = await prisma.$queryRawUnsafe<any[]>(
@@ -123,7 +123,7 @@ router.get("/rondas/:id/empate", async (req, res) => {
  * GET /api/rondas/:id/detallado
  * Resultados detallados (vista v_resultados_detallados)
  */
-router.get("/rondas/:id/detallado", async (req, res) => {
+router.get("/rondas/:id/detallado", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const detallados = await prisma.$queryRawUnsafe<any[]>(
