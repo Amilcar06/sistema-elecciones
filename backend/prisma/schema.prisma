@@ -18,6 +18,7 @@ model Eleccion {
   cargos        Cargo[]
   publicaciones PublicacionResultado[]
 
+  @@map("Eleccion")
   @@index([fecha], map: "idx_eleccion_fecha")
   @@index([estado], map: "idx_eleccion_estado")
   @@index([fecha, estado], map: "idx_eleccion_fecha_estado")
@@ -30,6 +31,8 @@ model CatalogoCargo {
   created_at  DateTime @default(now())
   updated_at  DateTime @default(now()) @updatedAt
   cargos      Cargo[]
+
+  @@map("CatalogoCargo")
 }
 
 model Cargo {
@@ -45,6 +48,7 @@ model Cargo {
   eleccion    Eleccion      @relation(fields: [id_eleccion], references: [id_eleccion])
   rondas      Ronda[]
 
+  @@map("Cargo")
   @@unique([id_eleccion, orden], name: "uq_eleccion_orden")
   @@index([id_eleccion], map: "idx_cargo_eleccion")
   @@index([estado], map: "idx_cargo_estado")
@@ -61,6 +65,7 @@ model Candidato {
   cargo           Cargo       @relation(fields: [id_cargo], references: [id_cargo])
   resultados      Resultado[]
 
+  @@map("Candidato")
   @@unique([id_cargo, nombre_completo], name: "uq_candidato_cargo_nombre")
   @@index([id_cargo], map: "idx_candidato_cargo")
   @@index([activo], map: "idx_candidato_activo")
@@ -76,6 +81,7 @@ model Ronda {
   resultados     Resultado[]
   cargo          Cargo       @relation(fields: [id_cargo], references: [id_cargo])
 
+  @@map("Ronda")
   @@unique([id_cargo, numero_ronda], name: "uq_ronda_cargo_numero")
   @@index([id_cargo], map: "idx_ronda_cargo")
   @@index([fecha_registro], map: "idx_ronda_fecha")
@@ -92,6 +98,7 @@ model Resultado {
   candidato      Candidato @relation(fields: [id_candidato], references: [id_candidato])
   ronda          Ronda     @relation(fields: [id_ronda], references: [id_ronda])
 
+  @@map("Resultado")
   @@unique([id_ronda, id_candidato], name: "uq_resultado_ronda_candidato")
   @@index([id_ronda], map: "idx_resultado_ronda")
   @@index([votos], map: "idx_resultado_votos")
@@ -107,6 +114,7 @@ model PublicacionResultado {
   nota              String?
   eleccion          Eleccion        @relation(fields: [id_eleccion], references: [id_eleccion])
 
+  @@map("PublicacionResultado")
   @@index([id_eleccion], map: "idx_publicacion_eleccion")
 }
 
