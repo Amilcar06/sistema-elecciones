@@ -9,10 +9,10 @@ datasource db {
 
 model Eleccion {
   id_eleccion   Int                    @id @default(autoincrement())
-  nombre        String                 @db.VarChar(100)
-  fecha         DateTime               @db.Date
+  nombre        String
+  fecha         DateTime
   estado        EstadoEleccion         @default(DRAFT)
-  descripcion   String?                @db.Text
+  descripcion   String?
   created_at    DateTime               @default(now())
   updated_at    DateTime               @updatedAt
   cargos        Cargo[]
@@ -25,8 +25,8 @@ model Eleccion {
 
 model CatalogoCargo {
   id_catalogo Int      @id @default(autoincrement())
-  nombre      String   @unique @db.VarChar(50)
-  descripcion String?  @db.Text
+  nombre      String   @unique
+  descripcion String?
   created_at  DateTime @default(now())
   updated_at  DateTime @default(now()) @updatedAt
   cargos      Cargo[]
@@ -48,13 +48,13 @@ model Cargo {
   @@unique([id_eleccion, orden], name: "uq_eleccion_orden")
   @@index([id_eleccion], map: "idx_cargo_eleccion")
   @@index([estado], map: "idx_cargo_estado")
-  @@index([id_catalogo], map: "Cargo_id_catalogo_fkey")
+  @@index([id_catalogo], map: "idx_cargo_catalogo")
 }
 
 model Candidato {
   id_candidato    Int         @id @default(autoincrement())
   id_cargo        Int
-  nombre_completo String      @db.VarChar(150)
+  nombre_completo String
   activo          Boolean     @default(true)
   created_at      DateTime    @default(now())
   updated_at      DateTime    @updatedAt
@@ -72,7 +72,7 @@ model Ronda {
   numero_ronda   Int
   fecha_registro DateTime    @default(now())
   finalizada     Boolean     @default(false)
-  observaciones  String?     @db.Text
+  observaciones  String?
   resultados     Resultado[]
   cargo          Cargo       @relation(fields: [id_cargo], references: [id_cargo])
 
@@ -86,7 +86,7 @@ model Resultado {
   id_ronda       Int
   id_candidato   Int
   votos          Int       @default(0)
-  registrado_por String?   @db.VarChar(50)
+  registrado_por String?
   created_at     DateTime  @default(now())
   updated_at     DateTime  @updatedAt
   candidato      Candidato @relation(fields: [id_candidato], references: [id_candidato])
@@ -95,16 +95,16 @@ model Resultado {
   @@unique([id_ronda, id_candidato], name: "uq_resultado_ronda_candidato")
   @@index([id_ronda], map: "idx_resultado_ronda")
   @@index([votos], map: "idx_resultado_votos")
-  @@index([id_candidato], map: "Resultado_id_candidato_fkey")
+  @@index([id_candidato], map: "idx_resultado_candidato")
 }
 
 model PublicacionResultado {
   id_publicacion    Int             @id @default(autoincrement())
   id_eleccion       Int
-  publicado_por     String?         @db.VarChar(50)
+  publicado_por     String?
   fecha_publicacion DateTime        @default(now())
   modo              ModoPublicacion @default(PROYECTOR)
-  nota              String?         @db.Text
+  nota              String?
   eleccion          Eleccion        @relation(fields: [id_eleccion], references: [id_eleccion])
 
   @@index([id_eleccion], map: "idx_publicacion_eleccion")
