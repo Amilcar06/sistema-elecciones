@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router } from "express";
 import prisma from "../prisma";
 
 const router = Router();
@@ -7,7 +7,7 @@ const router = Router();
  * GET /api/catalogo-cargos
  * Listar todos los cargos disponibles
  */
-router.get("/", async (_: Request, res: Response) => {
+router.get("/", async (_, res) => {
   try {
     const cargos = await prisma.catalogoCargo.findMany({
       orderBy: { nombre: "asc" },
@@ -22,7 +22,7 @@ router.get("/", async (_: Request, res: Response) => {
  * GET /api/catalogo-cargos/:id
  * Obtener un cargo específico por ID
  */
-router.get("/:id", async (req: Request, res: Response) => {
+router.get("/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const cargo = await prisma.catalogoCargo.findUnique({
@@ -43,7 +43,7 @@ router.get("/:id", async (req: Request, res: Response) => {
  * POST /api/catalogo-cargos
  * Crear nuevo cargo base
  */
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", async (req, res) => {
   try {
     const { nombre, descripcion } = req.body;
 
@@ -69,7 +69,7 @@ router.post("/", async (req: Request, res: Response) => {
  * PUT /api/catalogo-cargos/:id
  * Actualizar nombre o descripción
  */
-router.put("/:id", async (req: Request, res: Response) => {
+router.put("/:id", async (req, res) => {
   const { id } = req.params;
   const { nombre, descripcion } = req.body;
 
@@ -98,7 +98,7 @@ router.put("/:id", async (req: Request, res: Response) => {
  * DELETE /api/catalogo-cargos/:id
  * Eliminar cargo base (si no está en uso)
  */
-router.delete("/:id", async (req: Request, res: Response) => {
+router.delete("/:id", async (req, res) => {
   const { id } = req.params;
   try {
     await prisma.catalogoCargo.delete({

@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router } from "express";
 import prisma from "../prisma";
 
 const router = Router();
@@ -7,7 +7,7 @@ const router = Router();
  * GET /api/publicaciones
  * Listar todas las publicaciones
  */
-router.get("/", async (req: Request, res: Response) => {
+router.get("/", async (req, res) => {
   try {
     const publicaciones = await prisma.publicacionResultado.findMany({
       include: {
@@ -28,7 +28,7 @@ router.get("/", async (req: Request, res: Response) => {
  * GET /api/publicaciones/:id
  * Obtener una publicación específica
  */
-router.get("/:id", async (req: Request, res: Response) => {
+router.get("/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const publicacion = await prisma.publicacionResultado.findUnique({
@@ -52,7 +52,7 @@ router.get("/:id", async (req: Request, res: Response) => {
  * POST /api/publicaciones
  * Registrar nueva publicación
  */
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", async (req, res) => {
   try {
     const { id_eleccion, nota, publicado_por, modo = 'PROYECTOR' } = req.body;
 
@@ -82,7 +82,7 @@ router.post("/", async (req: Request, res: Response) => {
  * PUT /api/publicaciones/:id
  * Actualizar publicación
  */
-router.put("/:id", async (req: Request, res: Response) => {
+router.put("/:id", async (req, res) => {
   const { id } = req.params;
   const { nota, publicado_por, modo } = req.body;
 
@@ -112,7 +112,7 @@ router.put("/:id", async (req: Request, res: Response) => {
  * DELETE /api/publicaciones/:id
  * Eliminar publicación
  */
-router.delete("/:id", async (req: Request, res: Response) => {
+router.delete("/:id", async (req, res) => {
   const { id } = req.params;
   try {
     await prisma.publicacionResultado.delete({
@@ -131,7 +131,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
  * GET /api/elecciones/:id/publicaciones
  * Obtener publicaciones de una elección específica
  */
-router.get("/elecciones/:id/publicaciones", async (req: Request, res: Response) => {
+router.get("/elecciones/:id/publicaciones", async (req, res) => {
   const { id } = req.params;
   try {
     const publicaciones = await prisma.publicacionResultado.findMany({

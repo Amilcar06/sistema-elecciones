@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router } from "express";
 import prisma from "../prisma";
 
 const router = Router();
@@ -7,7 +7,7 @@ const router = Router();
  * GET /api/resultados/rondas/:idRonda
  * Listar resultados de una ronda
  */
-router.get("/rondas/:idRonda", async (req: Request, res: Response) => {
+router.get("/rondas/:idRonda", async (req, res) => {
   try {
     const { idRonda } = req.params;
     const resultados = await prisma.resultado.findMany({
@@ -26,7 +26,7 @@ router.get("/rondas/:idRonda", async (req: Request, res: Response) => {
  * Registrar votos de varios candidatos en la ronda
  * body: [ { id_candidato, votos } ]
  */
-router.post("/rondas/:idRonda", async (req: Request, res: Response) => {
+router.post("/rondas/:idRonda", async (req, res) => {
   try {
     const { idRonda } = req.params;
     const resultados: { id_candidato: number; votos: number }[] = req.body;
@@ -53,7 +53,7 @@ router.post("/rondas/:idRonda", async (req: Request, res: Response) => {
  * PUT /api/resultados/:id
  * Actualizar votos de un resultado
  */
-router.put("/:id", async (req: Request, res: Response) => {
+router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { votos } = req.body;
@@ -73,7 +73,7 @@ router.put("/:id", async (req: Request, res: Response) => {
  * DELETE /api/resultados/:id
  * Eliminar resultado
  */
-router.delete("/:id", async (req: Request, res: Response) => {
+router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -89,15 +89,28 @@ router.delete("/:id", async (req: Request, res: Response) => {
 
 /**
  * GET /api/rondas/:id/ganador
- * Obtener ganador de la ronda (función SQL)
+ * Obtener ganador de la ronda
  */
-router.get("/rondas/:id/ganador", async (req: Request, res: Response) => {
+router.get("/rondas/:id/ganador", async (req, res) => {
   try {
     const { id } = req.params;
-    const [result] = await prisma.$queryRawUnsafe<any[]>(
-      `SELECT obtener_ganador_ronda(${Number(id)}) AS ganador`
-    );
-    res.json(result);
+    const ganador = await prisma.$queryRawUnsafe<any[]>(`
+      SELECT 
+        c.id_candidato,
+        c.nombre_completo,
+        r.votos,
+        r.id_ronda
+      FROM "Resultado" r
+      JOIN "Candidato" c ON r.id_candidato = c.id_candidato
+      WHERE r.id_ronda = ${Number(id)}
+        AND r.votos = (
+          SELECT MAX(votos) 
+          FROM "Resultado" 
+          WHERE id_ronda = ${Number(id)}
+        )
+      LIMIT 1
+    `);
+    res.json(ganador[0] || null);
   } catch (err) {
     res.status(500).json({ error: "Error al obtener ganador", details: err });
   }
@@ -105,15 +118,23 @@ router.get("/rondas/:id/ganador", async (req: Request, res: Response) => {
 
 /**
  * GET /api/rondas/:id/empate
- * Verificar si hubo empate (función SQL)
+ * Verificar si hubo empate
  */
-router.get("/rondas/:id/empate", async (req: Request, res: Response) => {
+router.get("/rondas/:id/empate", async (req, res) => {
   try {
     const { id } = req.params;
-    const [result] = await prisma.$queryRawUnsafe<any[]>(
-      `SELECT hay_empate_primer_lugar(${Number(id)}) AS empate`
-    );
-    res.json(result);
+    const empate = await prisma.$queryRawUnsafe<any[]>(`
+      SELECT 
+        COUNT(*) > 1 AS empate
+      FROM "Resultado" r
+      WHERE r.id_ronda = ${Number(id)}
+        AND r.votos = (
+          SELECT MAX(votos) 
+          FROM "Resultado" 
+          WHERE id_ronda = ${Number(id)}
+        )
+    `);
+    res.json({ empate: empate[0]?.empate || false });
   } catch (err) {
     res.status(500).json({ error: "Error al verificar empate", details: err });
   }
@@ -121,14 +142,25 @@ router.get("/rondas/:id/empate", async (req: Request, res: Response) => {
 
 /**
  * GET /api/rondas/:id/detallado
- * Resultados detallados (vista v_resultados_detallados)
+ * Resultados detallados con posición
  */
-router.get("/rondas/:id/detallado", async (req: Request, res: Response) => {
+router.get("/rondas/:id/detallado", async (req, res) => {
   try {
     const { id } = req.params;
-    const detallados = await prisma.$queryRawUnsafe<any[]>(
-      `SELECT * FROM v_resultados_detallados WHERE id_ronda = ${Number(id)} ORDER BY posicion`
-    );
+    const detallados = await prisma.$queryRawUnsafe<any[]>(`
+      SELECT 
+        r.id_resultado,
+        r.id_ronda,
+        r.id_candidato,
+        c.nombre_completo,
+        r.votos,
+        ROW_NUMBER() OVER (ORDER BY r.votos DESC) as posicion,
+        ROUND((r.votos * 100.0 / SUM(r.votos) OVER ()), 2) as porcentaje
+      FROM "Resultado" r
+      JOIN "Candidato" c ON r.id_candidato = c.id_candidato
+      WHERE r.id_ronda = ${Number(id)}
+      ORDER BY r.votos DESC
+    `);
     res.json(detallados);
   } catch (err) {
     res.status(500).json({ error: "Error al obtener resultados detallados", details: err });

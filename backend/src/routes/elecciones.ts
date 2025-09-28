@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router } from "express";
 import prisma from "../prisma";
 
 const router = Router();
@@ -8,7 +8,7 @@ const router = Router();
  * Resumen desde vista v_elecciones_resumen
  * REVISAR PORQUE NO SIRVE
  */
-router.get("/resumen/lista", async (_: Request, res: Response) => {
+router.get("/resumen/lista", async (_, res) => {
   try {
     const resumen = await prisma.$queryRawUnsafe(
       `SELECT 
@@ -17,11 +17,11 @@ router.get("/resumen/lista", async (_: Request, res: Response) => {
           e.fecha,
           e.estado,
           e.descripcion,
-          /*COUNT(c.id_cargo) AS total_cargos,*/
+          COUNT(c.id_cargo) AS total_cargos,
           e.created_at,
           e.updated_at
-      FROM Eleccion e
-      LEFT JOIN Cargo c ON e.id_eleccion = c.id_eleccion
+      FROM "Eleccion" e
+      LEFT JOIN "Cargo" c ON e.id_eleccion = c.id_eleccion
       GROUP BY e.id_eleccion, e.nombre, e.fecha, e.estado, e.descripcion, e.created_at, e.updated_at
       ORDER BY e.fecha DESC`
     );
@@ -36,7 +36,7 @@ router.get("/resumen/lista", async (_: Request, res: Response) => {
  * GET /api/elecciones
  * Listar elecciones (con filtros opcionales: estado, anio)
  */
-router.get("/", async (req: Request, res: Response) => {
+router.get("/", async (req, res) => {
   try {
     const { estado, anio } = req.query;
 
@@ -83,7 +83,7 @@ router.get("/", async (req: Request, res: Response) => {
  * GET /api/elecciones/:id
  * Obtener detalle de una elección
  */
-router.get("/:id", async (req: Request, res: Response) => {
+router.get("/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const eleccion = await prisma.eleccion.findUnique({
@@ -103,7 +103,7 @@ router.get("/:id", async (req: Request, res: Response) => {
  * POST /api/elecciones
  * Crear nueva elección
  */
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", async (req, res) => {
   try {
     const { nombre, descripcion, fecha, anio } = req.body;
 
@@ -133,7 +133,7 @@ router.post("/", async (req: Request, res: Response) => {
  * PUT /api/elecciones/:id
  * Actualizar elección
  */
-router.put("/:id", async (req: Request, res: Response) => {
+router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, descripcion } = req.body;
@@ -157,7 +157,7 @@ router.put("/:id", async (req: Request, res: Response) => {
  * DELETE /api/elecciones/:id
  * Eliminar elección
  */
-router.delete("/:id", async (req: Request, res: Response) => {
+router.delete("/:id", async (req, res) => {
   const { id } = req.params;
   try {
     await prisma.eleccion.delete({
@@ -173,7 +173,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
  * PATCH /api/elecciones/:id/estado
  * Cambiar estado de elección
  */
-router.patch("/:id/estado", async (req: Request, res: Response) => {
+router.patch("/:id/estado", async (req, res) => {
   const { id } = req.params;
   const { estado } = req.body;
 
@@ -197,7 +197,7 @@ router.patch("/:id/estado", async (req: Request, res: Response) => {
  * GET /api/elecciones/:id/resultados-publicos
  * Obtener resultados para pantalla pública/proyector
  */
-router.get("/:id/resultados-publicos", async (req: Request, res: Response) => {
+router.get("/:id/resultados-publicos", async (req, res) => {
   const { id } = req.params;
   try {
     const eleccion = await prisma.eleccion.findUnique({
@@ -239,7 +239,7 @@ router.get("/:id/resultados-publicos", async (req: Request, res: Response) => {
  * GET /api/elecciones/:id/resumen-final
  * Obtener resumen final con todos los ganadores
  */
-router.get("/:id/resumen-final", async (req: Request, res: Response) => {
+router.get("/:id/resumen-final", async (req, res) => {
   const { id } = req.params;
   try {
     const resumen = await prisma.$queryRawUnsafe(`
@@ -252,26 +252,26 @@ router.get("/:id/resumen-final", async (req: Request, res: Response) => {
         res.votos,
         ROUND((res.votos * 100.0 / (
           SELECT SUM(res2.votos) 
-          FROM Resultado res2 
+          FROM "Resultado" res2 
           WHERE res2.id_ronda = r.id_ronda
         )), 2) as porcentaje,
         r.numero_ronda,
         e.nombre as eleccion_nombre,
         e.fecha
-      FROM Eleccion e
-      JOIN Cargo c ON e.id_eleccion = c.id_eleccion
-      JOIN CatalogoCargo cat ON c.id_catalogo = cat.id_catalogo
-      JOIN Ronda r ON c.id_cargo = r.id_cargo
-      JOIN Resultado res ON r.id_ronda = res.id_ronda
-      JOIN Candidato cand ON res.id_candidato = cand.id_candidato
+      FROM "Eleccion" e
+      JOIN "Cargo" c ON e.id_eleccion = c.id_eleccion
+      JOIN "CatalogoCargo" cat ON c.id_catalogo = cat.id_catalogo
+      JOIN "Ronda" r ON c.id_cargo = r.id_cargo
+      JOIN "Resultado" res ON r.id_ronda = res.id_ronda
+      JOIN "Candidato" cand ON res.id_candidato = cand.id_candidato
       WHERE e.id_eleccion = ${Number(id)}
         AND res.votos = (
           SELECT MAX(res2.votos) 
-          FROM Resultado res2 
+          FROM "Resultado" res2 
           WHERE res2.id_ronda = r.id_ronda
         )
         AND EXISTS (
-          SELECT 1 FROM Resultado res3 
+          SELECT 1 FROM "Resultado" res3 
           WHERE res3.id_ronda = r.id_ronda
         )
       ORDER BY c.orden ASC
@@ -287,7 +287,7 @@ router.get("/:id/resumen-final", async (req: Request, res: Response) => {
  * POST /api/elecciones/:id/generar-reporte
  * Generar reporte de la elección
  */
-router.post("/:id/generar-reporte", async (req: Request, res: Response) => {
+router.post("/:id/generar-reporte", async (req, res) => {
   const { id } = req.params;
   const { formato = 'pdf', incluir_detalles = true } = req.body;
   
@@ -304,12 +304,12 @@ router.post("/:id/generar-reporte", async (req: Request, res: Response) => {
         res.votos,
         r.numero_ronda,
         ROUND((res.votos * 100.0 / SUM(res.votos) OVER (PARTITION BY r.id_ronda)), 2) as porcentaje
-      FROM Eleccion e
-      JOIN Cargo c ON e.id_eleccion = c.id_eleccion
-      JOIN CatalogoCargo cat ON c.id_catalogo = cat.id_catalogo
-      JOIN Ronda r ON c.id_cargo = r.id_cargo
-      JOIN Resultado res ON r.id_ronda = res.id_ronda
-      JOIN Candidato cand ON res.id_candidato = cand.id_candidato
+      FROM "Eleccion" e
+      JOIN "Cargo" c ON e.id_eleccion = c.id_eleccion
+      JOIN "CatalogoCargo" cat ON c.id_catalogo = cat.id_catalogo
+      JOIN "Ronda" r ON c.id_cargo = r.id_cargo
+      JOIN "Resultado" res ON r.id_ronda = res.id_ronda
+      JOIN "Candidato" cand ON res.id_candidato = cand.id_candidato
       WHERE e.id_eleccion = ${Number(id)}
       ORDER BY c.orden, r.numero_ronda, res.votos DESC
     `);
