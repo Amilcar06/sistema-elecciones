@@ -1,0 +1,1078 @@
+{
+  "info": {
+    "name": "Sistema Electoral - API Completa",
+    "_postman_id": "elecciones-api-completa-2025",
+    "description": "Colección completa para el sistema electoral con todos los endpoints corregidos y nuevos",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "🏥 Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🗳️ Elecciones",
+      "item": [
+        {
+          "name": "Listar elecciones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/elecciones",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "elecciones"]
+            }
+          }
+        },
+        {
+          "name": "Listar elecciones con filtros",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/elecciones?estado=DRAFT&anio=2025",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "elecciones"],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "DRAFT"
+                },
+                {
+                  "key": "anio",
+                  "value": "2025"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener elección por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/elecciones/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "elecciones", "1"]
+            }
+          }
+        },
+        {
+          "name": "Crear nueva elección",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Elección General 2025\",\n  \"descripcion\": \"Elección para elegir nueva directiva\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/elecciones",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "elecciones"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar elección",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Elección General 2025 - Actualizada\",\n  \"descripcion\": \"Descripción actualizada\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/elecciones/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "elecciones", "1"]
+            }
+          }
+        },
+        {
+          "name": "Cambiar estado de elección",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"EN_CURSO\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/elecciones/1/estado",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "elecciones", "1", "estado"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar elección",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/elecciones/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "elecciones", "1"]
+            }
+          }
+        },
+        {
+          "name": "Resumen de elecciones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/elecciones/resumen/lista",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "elecciones", "resumen", "lista"]
+            }
+          }
+        },
+        {
+          "name": "Resultados públicos (Proyector)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/elecciones/1/resultados-publicos",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "elecciones", "1", "resultados-publicos"]
+            }
+          }
+        },
+        {
+          "name": "Resumen final con ganadores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/elecciones/1/resumen-final",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "elecciones", "1", "resumen-final"]
+            }
+          }
+        },
+        {
+          "name": "Generar reporte",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"formato\": \"pdf\",\n  \"incluir_detalles\": true\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/elecciones/1/generar-reporte",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "elecciones", "1", "generar-reporte"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 Catálogo de Cargos",
+      "item": [
+        {
+          "name": "Listar cargos disponibles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/catalogo-cargos",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "catalogo-cargos"]
+            }
+          }
+        },
+        {
+          "name": "Obtener cargo por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/catalogo-cargos/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "catalogo-cargos", "1"]
+            }
+          }
+        },
+        {
+          "name": "Crear nuevo cargo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Coordinador\",\n  \"descripcion\": \"Coordinador de actividades\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/catalogo-cargos",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "catalogo-cargos"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar cargo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Coordinador General\",\n  \"descripcion\": \"Coordinador general de actividades\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/catalogo-cargos/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "catalogo-cargos", "1"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar cargo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/catalogo-cargos/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "catalogo-cargos", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👔 Cargos (por Elección)",
+      "item": [
+        {
+          "name": "Listar todos los cargos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/cargos",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "cargos"]
+            }
+          }
+        },
+        {
+          "name": "Listar cargos por elección",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/cargos?id_eleccion=1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "cargos"],
+              "query": [
+                {
+                  "key": "id_eleccion",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar cargos por estado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/cargos?estado=PENDIENTE",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "cargos"],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "PENDIENTE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener cargo por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/cargos/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "cargos", "1"]
+            }
+          }
+        },
+        {
+          "name": "Crear cargo en elección",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_eleccion\": 1,\n  \"id_catalogo\": 1,\n  \"orden\": 1,\n  \"estado\": \"PENDIENTE\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/cargos",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "cargos"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar cargo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"EN_PROCESO\",\n  \"orden\": 2\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/cargos/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "cargos", "1"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar cargo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/cargos/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "cargos", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Candidatos",
+      "item": [
+        {
+          "name": "Listar todos los candidatos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/candidatos",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "candidatos"]
+            }
+          }
+        },
+        {
+          "name": "Listar candidatos por cargo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/candidatos?id_cargo=1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "candidatos"],
+              "query": [
+                {
+                  "key": "id_cargo",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar candidatos activos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/candidatos?activo=true",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "candidatos"],
+              "query": [
+                {
+                  "key": "activo",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener candidato por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/candidatos/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "candidatos", "1"]
+            }
+          }
+        },
+        {
+          "name": "Crear candidato",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_cargo\": 1,\n  \"nombre\": \"Juan Pérez\",\n  \"activo\": true\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/candidatos",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "candidatos"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar candidato",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Juan Carlos Pérez\",\n  \"activo\": true\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/candidatos/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "candidatos", "1"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar candidato",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/candidatos/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "candidatos", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔄 Rondas",
+      "item": [
+        {
+          "name": "Listar rondas por cargo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/rondas/cargos/1/rondas",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "rondas", "cargos", "1", "rondas"]
+            }
+          }
+        },
+        {
+          "name": "Crear nueva ronda",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": 1,\n  \"observaciones\": \"Primera ronda de votación\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/rondas/cargos/1/rondas",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "rondas", "cargos", "1", "rondas"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar ronda",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"finalizada\": true,\n  \"observaciones\": \"Ronda finalizada exitosamente\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/rondas/rondas/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "rondas", "rondas", "1"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar ronda",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/rondas/rondas/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "rondas", "rondas", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 Resultados",
+      "item": [
+        {
+          "name": "Listar resultados por ronda",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/resultados/rondas/1/resultados",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "resultados", "rondas", "1", "resultados"]
+            }
+          }
+        },
+        {
+          "name": "Registrar resultados de ronda",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"id_candidato\": 1,\n    \"votos\": 150\n  },\n  {\n    \"id_candidato\": 2,\n    \"votos\": 120\n  },\n  {\n    \"id_candidato\": 3,\n    \"votos\": 80\n  }\n]"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/resultados/rondas/1/resultados",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "resultados", "rondas", "1", "resultados"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar resultado",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"votos\": 160\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/resultados/resultados/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "resultados", "resultados", "1"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar resultado",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/resultados/resultados/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "resultados", "resultados", "1"]
+            }
+          }
+        },
+        {
+          "name": "Obtener ganador de ronda",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/resultados/rondas/1/ganador",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "resultados", "rondas", "1", "ganador"]
+            }
+          }
+        },
+        {
+          "name": "Verificar empate",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/resultados/rondas/1/empate",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "resultados", "rondas", "1", "empate"]
+            }
+          }
+        },
+        {
+          "name": "Resultados detallados",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/resultados/rondas/1/detallado",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "resultados", "rondas", "1", "detallado"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📢 Publicaciones",
+      "item": [
+        {
+          "name": "Listar todas las publicaciones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/publicaciones",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "publicaciones"]
+            }
+          }
+        },
+        {
+          "name": "Obtener publicación por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/publicaciones/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "publicaciones", "1"]
+            }
+          }
+        },
+        {
+          "name": "Crear nueva publicación",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_eleccion\": 1,\n  \"nota\": \"Resultados publicados oficialmente\",\n  \"publicado_por\": \"admin\",\n  \"modo\": \"PROYECTOR\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/publicaciones",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "publicaciones"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar publicación",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nota\": \"Resultados actualizados\",\n  \"modo\": \"PDF\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/publicaciones/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "publicaciones", "1"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar publicación",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/publicaciones/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "publicaciones", "1"]
+            }
+          }
+        },
+        {
+          "name": "Publicaciones por elección",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/publicaciones/elecciones/1/publicaciones",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "publicaciones", "elecciones", "1", "publicaciones"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🧪 Flujo Completo de Prueba",
+      "item": [
+        {
+          "name": "1. Crear Elección",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Elección de Prueba 2025\",\n  \"descripcion\": \"Elección para pruebas del sistema\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/elecciones",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "elecciones"]
+            }
+          }
+        },
+        {
+          "name": "2. Agregar Cargo a Elección",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_eleccion\": 1,\n  \"id_catalogo\": 1,\n  \"orden\": 1,\n  \"estado\": \"PENDIENTE\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/cargos",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "cargos"]
+            }
+          }
+        },
+        {
+          "name": "3. Registrar Candidatos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_cargo\": 1,\n  \"nombre\": \"Candidato A\",\n  \"activo\": true\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/candidatos",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "candidatos"]
+            }
+          }
+        },
+        {
+          "name": "4. Crear Primera Ronda",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": 1,\n  \"observaciones\": \"Primera ronda de votación\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/rondas/cargos/1/rondas",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "rondas", "cargos", "1", "rondas"]
+            }
+          }
+        },
+        {
+          "name": "5. Registrar Resultados",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"id_candidato\": 1,\n    \"votos\": 150\n  },\n  {\n    \"id_candidato\": 2,\n    \"votos\": 120\n  }\n]"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/resultados/rondas/1/resultados",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "resultados", "rondas", "1", "resultados"]
+            }
+          }
+        },
+        {
+          "name": "6. Ver Ganador",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/resultados/rondas/1/ganador",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "resultados", "rondas", "1", "ganador"]
+            }
+          }
+        },
+        {
+          "name": "7. Publicar Resultados",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_eleccion\": 1,\n  \"nota\": \"Resultados oficiales publicados\",\n  \"publicado_por\": \"admin\",\n  \"modo\": \"PROYECTOR\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/publicaciones",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "publicaciones"]
+            }
+          }
+        },
+        {
+          "name": "8. Ver Resumen Final",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/api/elecciones/1/resumen-final",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "elecciones", "1", "resumen-final"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3001/api",
+      "type": "string"
+    }
+  ]
+}

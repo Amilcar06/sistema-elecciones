@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Eleccion {
+  id_eleccion   Int                    @id @default(autoincrement())
+  nombre        String                 @db.VarChar(100)
+  fecha         DateTime
+  estado        EstadoEleccion         @default(DRAFT)
+  descripcion   String?
+  created_at    DateTime               @default(now())
+  updated_at    DateTime               @updatedAt
+  cargos        Cargo[]
+  publicaciones PublicacionResultado[]
+
+  @@index([fecha], map: "idx_eleccion_fecha")
+  @@index([estado], map: "idx_eleccion_estado")
+  @@index([fecha, estado], map: "idx_eleccion_fecha_estado")
+}
+
+model CatalogoCargo {
+  id_catalogo Int      @id @default(autoincrement())
+  nombre      String   @unique @db.VarChar(50)
+  descripcion String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @default(now()) @updatedAt
+  cargos      Cargo[]
+}
+
+model Cargo {
+  id_cargo    Int           @id @default(autoincrement())
+  id_eleccion Int
+  id_catalogo Int
+  estado      EstadoCargo   @default(PENDIENTE)
+  orden       Int
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+  candidatos  Candidato[]
+  catalogo    CatalogoCargo @relation(fields: [id_catalogo], references: [id_catalogo])
+  eleccion    Eleccion      @relation(fields: [id_eleccion], references: [id_eleccion])
+  rondas      Ronda[]
+
+  @@unique([id_eleccion, orden], name: "uq_eleccion_orden")
+  @@index([id_eleccion], map: "idx_cargo_eleccion")
+  @@index([estado], map: "idx_cargo_estado")
+  @@index([id_catalogo], map: "idx_cargo_catalogo")
+}
+
+model Candidato {
+  id_candidato    Int         @id @default(autoincrement())
+  id_cargo        Int
+  nombre_completo String      @db.VarChar(150)
+  activo          Boolean     @default(true)
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
+  cargo           Cargo       @relation(fields: [id_cargo], references: [id_cargo])
+  resultados      Resultado[]
+
+  @@unique([id_cargo, nombre_completo], name: "uq_candidato_cargo_nombre")
+  @@index([id_cargo], map: "idx_candidato_cargo")
+  @@index([activo], map: "idx_candidato_activo")
+}
+
+model Ronda {
+  id_ronda       Int         @id @default(autoincrement())
+  id_cargo       Int
+  numero_ronda   Int
+  fecha_registro DateTime    @default(now())
+  finalizada     Boolean     @default(false)
+  observaciones  String?
+  resultados     Resultado[]
+  cargo          Cargo       @relation(fields: [id_cargo], references: [id_cargo])
+
+  @@unique([id_cargo, numero_ronda], name: "uq_ronda_cargo_numero")
+  @@index([id_cargo], map: "idx_ronda_cargo")
+  @@index([fecha_registro], map: "idx_ronda_fecha")
+}
+
+model Resultado {
+  id_resultado   Int       @id @default(autoincrement())
+  id_ronda       Int
+  id_candidato   Int
+  votos          Int       @default(0)
+  registrado_por String?   @db.VarChar(50)
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @default(now()) @updatedAt
+  candidato      Candidato @relation(fields: [id_candidato], references: [id_candidato])
+  ronda          Ronda     @relation(fields: [id_ronda], references: [id_ronda])
+
+  @@unique([id_ronda, id_candidato], name: "uq_resultado_ronda_candidato")
+  @@index([id_ronda], map: "idx_resultado_ronda")
+  @@index([votos], map: "idx_resultado_votos")
+  @@index([id_candidato], map: "idx_resultado_candidato")
+}
+
+model PublicacionResultado {
+  id_publicacion    Int             @id @default(autoincrement())
+  id_eleccion       Int
+  publicado_por     String?         @db.VarChar(50)
+  fecha_publicacion DateTime        @default(now())
+  modo              ModoPublicacion @default(PROYECTOR)
+  nota              String?
+  eleccion          Eleccion        @relation(fields: [id_eleccion], references: [id_eleccion])
+
+  @@index([id_eleccion], map: "idx_publicacion_eleccion")
+}
+
+enum EstadoEleccion {
+  DRAFT
+  EN_CURSO
+  FINALIZADA
+}
+
+enum EstadoCargo {
+  PENDIENTE
+  EN_PROCESO
+  FINALIZADO
+}
+
+enum ModoPublicacion {
+  PROYECTOR
+  PDF
+  EXCEL
+}
