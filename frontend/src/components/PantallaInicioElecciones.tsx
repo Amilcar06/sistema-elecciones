@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Input } from './ui/input';
@@ -40,10 +40,10 @@ const handleCreateElection = async () => {
         <div className="mb-12">
           <div className="flex items-center justify-center mb-6">
             <Vote className="h-12 w-12 text-primary mr-4" />
-            <h1 className="text-4xl font-bold text-primary">ELECCIONES ACADÉMICAS 2025</h1>
+            <h1 className="text-4xl font-bold text-primary">ELECCIONES MESA DIRECTIVA 2025</h1>
           </div>
           <p className="text-xl text-muted-foreground">
-            Sistema de gestión para elecciones estudiantiles
+            Sistema de gestión para elecciones
           </p>
         </div>
 
@@ -60,7 +60,7 @@ const handleCreateElection = async () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    Crear y configurar una nueva elección académica
+                    Crear y configurar una nueva elección
                   </p>
                 </CardContent>
               </Card>
@@ -84,7 +84,7 @@ const handleCreateElection = async () => {
                   <Label htmlFor="election-description">Descripción (Opcional)</Label>
                   <Input
                     id="election-description"
-                    placeholder="Ej: Elecciones para el período académico 2025-2026"
+                    placeholder="Ej: Elecciones para la mesa directiva 2025-2026"
                     value={electionDescription}
                     onChange={(e) => setElectionDescription(e.target.value)}
                   />

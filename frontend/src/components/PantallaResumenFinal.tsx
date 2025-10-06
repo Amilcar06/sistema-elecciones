@@ -146,8 +146,7 @@ export function PantallaResumenFinal({ election, onBack, onHome, onChangeElectio
         <Card className="mb-8 bg-white shadow-xl">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2 text-2xl">
-              <Trophy className="h-6 w-6 text-yellow-500" />
-              <span>{election.nombre.toUpperCase()} - RESUMEN FINAL</span>
+              <span>ELECCION - {election.nombre.toUpperCase()}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -171,51 +170,58 @@ export function PantallaResumenFinal({ election, onBack, onHome, onChangeElectio
 
             {/* Winners List */}
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold mb-4">Ganadores Electos</h2>
+              <h2 className="text-2xl font-bold mb-4 flex items-center space-x-2">
+                <span>Ganadores Electos</span>
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Los siguientes candidatos fueron electos en sus respectivos cargos. 
+                Para cargos con segunda vuelta, se muestran los resultados de la ronda final.
+              </p>
+              
               {loading ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  <p>Cargando ganadores...</p>
+                  <p>Cargando ganadores electos...</p>
                 </div>
               ) : ganadores.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>No hay resultados completados aún</p>
+                  <p className="text-sm mt-2">Los ganadores electos aparecerán aquí una vez que se completen las votaciones</p>
                 </div>
               ) : (
                 <div className="grid gap-4">
                   {ganadores.map((ganador, index) => (
-                    <Card key={ganador.id_cargo} className="border-2 border-yellow-200 bg-yellow-50">
+                    <Card key={ganador.id_cargo} className="border-2 border-yellow-200 bg-gradient-to-r from-yellow-50 to-yellow-100 hover:shadow-lg transition-shadow">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-4">
-                            <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center">
-                              <Trophy className="h-6 w-6 text-white" />
-                            </div>
-                            <div>
-                              <h3 className="text-xl font-bold text-yellow-800">
-                                {ganador.nombre_cargo}: {ganador.nombre_candidato}
-                              </h3>
-                              <div className="flex items-center space-x-4 text-yellow-700 mt-1">
-                                <span>{ganador.votos} votos ({parseFloat(ganador.porcentaje).toFixed(1)}%)</span>
-                                {ganador.numero_ronda > 1 && (
-                                  <span className="text-sm bg-yellow-200 px-2 py-1 rounded">
-                                    Ronda {ganador.numero_ronda}
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3 mb-2">
+                                <h3 className="text-xl font-bold text-yellow-800">
+                                  {ganador.nombre_cargo} : {ganador.nombre_candidato}
+                                </h3>
+                              </div>
+                              <div className="flex items-center space-x-4 text-gray-700">
+                              {ganador.numero_ronda > 1 ? (
+                                  <span className="py-1 rounded-full font-semibold">
+                                    Elegido 2da Vuelta
+                                  </span>
+                                ) : (
+                                  <span className="py-1 rounded-full font-semibold">
+                                    Elegido 1ra Vuelta
                                   </span>
                                 )}
+                              </div>            
+                              <div className="flex items-center space-x-4 text-yellow-700">
+                                <span className="py-1 rounded-full font-semibold">
+                                  {ganador.votos} votos ({parseFloat(ganador.porcentaje).toFixed(1)}%)
+                                </span>
                               </div>
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-2xl font-bold text-yellow-600">#{index + 1}</div>
-                          </div>
-                        </div>
-
-                        {/* Winner details */}
-                        <div className="mt-4 pt-4 border-t border-yellow-200">
-                          <div className="text-sm text-yellow-700">
-                            <p><strong>Ganador:</strong> {ganador.nombre_candidato}</p>
-                            <p><strong>Votos obtenidos:</strong> {ganador.votos} ({parseFloat(ganador.porcentaje).toFixed(1)}%)</p>
-                            <p><strong>Ronda:</strong> {ganador.numero_ronda}</p>
+                            <div className="text-3xl font-bold text-yellow-600 mb-1">#{index + 1}</div>
+                            <div className="text-sm text-gray-500">Cargo</div>
                           </div>
                         </div>
                       </CardContent>

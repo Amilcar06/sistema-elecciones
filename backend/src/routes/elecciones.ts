@@ -237,7 +237,9 @@ router.get("/:id/resultados-publicos", async (req, res) => {
 
 /**
  * GET /api/elecciones/:id/resumen-final
- * Obtener resumen final con todos los ganadores
+ * Obtener resumen final con ganadores de la ronda final de cada cargo
+ * Si hay 2 rondas: toma ganador de ronda 2
+ * Si hay 1 ronda: toma ganador de ronda 1
  */
 router.get("/:id/resumen-final", async (req, res) => {
   const { id } = req.params;
@@ -265,11 +267,19 @@ router.get("/:id/resumen-final", async (req, res) => {
       JOIN "Resultado" res ON r.id_ronda = res.id_ronda
       JOIN "Candidato" cand ON res.id_candidato = cand.id_candidato
       WHERE e.id_eleccion = ${Number(id)}
+        -- Solo tomar la ronda con el número más alto (ronda final) de cada cargo
+        AND r.numero_ronda = (
+          SELECT MAX(r2.numero_ronda) 
+          FROM "Ronda" r2 
+          WHERE r2.id_cargo = c.id_cargo
+        )
+        -- Solo tomar el candidato con más votos de esa ronda final
         AND res.votos = (
           SELECT MAX(res2.votos) 
           FROM "Resultado" res2 
           WHERE res2.id_ronda = r.id_ronda
         )
+        -- Asegurar que la ronda tenga resultados
         AND EXISTS (
           SELECT 1 FROM "Resultado" res3 
           WHERE res3.id_ronda = r.id_ronda

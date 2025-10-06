@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import { Label } from "./ui/label";
-import { Plus, X, ArrowLeft, Users, ArrowRight } from "lucide-react";
+import { Plus, X, ArrowLeft, Users, ArrowRight, Link } from "lucide-react";
 
 import { Eleccion } from "../services/eleccionService";
 import {
@@ -19,7 +19,7 @@ import {
   crearCargo,
   eliminarCargo,
 } from "../services/cargoService";
-import { listarCatalogos } from "../services/catalogoCargoService";
+import { listarCatalogos, crearCatalogo } from "../services/catalogoCargoService";
 import { Input } from "./ui/input";
 import {
   Select,
@@ -50,9 +50,14 @@ export function PantallaGestionCargos({
   const [cargos, setCargos] = useState<Cargo[]>([]);
   const [catalogos, setCatalogos] = useState<CatalogoCargo[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCreateCatalogDialogOpen, setIsCreateCatalogDialogOpen] = useState(false);
 
   // Campos de formulario
   const [catalogoSeleccionado, setCatalogoSeleccionado] = useState<string>("");
+  
+  // Campos para crear nuevo catálogo
+  const [nuevoCatalogoNombre, setNuevoCatalogoNombre] = useState<string>("");
+  const [nuevoCatalogoDescripcion, setNuevoCatalogoDescripcion] = useState<string>("");
 
   // Cargar cargos y catálogos
   useEffect(() => {
@@ -97,6 +102,27 @@ export function PantallaGestionCargos({
     setCatalogoSeleccionado("");
   };
 
+  const resetCreateCatalogForm = () => {
+    setIsCreateCatalogDialogOpen(false);
+    setNuevoCatalogoNombre("");
+    setNuevoCatalogoDescripcion("");
+  };
+
+  const createNewCatalog = async () => {
+    if (!nuevoCatalogoNombre.trim()) return;
+
+    try {
+      const nuevoCatalogo = await crearCatalogo(
+        nuevoCatalogoNombre.trim(),
+        nuevoCatalogoDescripcion.trim() || undefined
+      );
+      setCatalogos((prev) => [...prev, nuevoCatalogo]);
+      resetCreateCatalogForm();
+    } catch (err) {
+      console.error("Error creando catálogo", err);
+    }
+  };
+
   const getStatusBadge = (estado: Cargo["estado"]) => {
     const variants = {
       PENDIENTE: "secondary",
@@ -129,8 +155,32 @@ export function PantallaGestionCargos({
                 ELECCIÓN: "{election.nombre}" - Fecha:{" "}
                 {new Date(election.fecha).toLocaleDateString()}
               </p>
+              <p className="text-sm mt-1">
+                Estado: 
+                <span className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${
+                  election.estado === 'DRAFT' ? 'bg-gray-200 text-gray-800' :
+                  election.estado === 'EN_CURSO' ? 'bg-blue-200 text-blue-800' :
+                  'bg-green-200 text-green-800'
+                }`}>
+                  {election.estado === 'DRAFT' ? 'BORRADOR' :
+                   election.estado === 'EN_CURSO' ? 'EN CURSO' :
+                   'FINALIZADA'}
+                </span>
+              </p>
             </div>
           </div>
+          
+          {/* Botón URL Pública - Solo visible cuando la elección no está finalizada */}
+          {election.estado !== 'FINALIZADA' && (
+            <Button 
+              variant="outline" 
+              onClick={() => window.open(`/realtime/${election.id_eleccion}`, '_blank')}
+              className="flex items-center space-x-2"
+            >
+              <Link className="h-4 w-4" />
+              <span>URL Pública</span>
+            </Button>
+          )}
         </div>
 
         {/* Positions List */}
@@ -141,13 +191,59 @@ export function PantallaGestionCargos({
                 <Users className="h-5 w-5" />
                 <span>Cargos Definidos</span>
               </CardTitle>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Agregar Cargo
-                  </Button>
-                </DialogTrigger>
+              <div className="flex space-x-2">
+                <Dialog open={isCreateCatalogDialogOpen} onOpenChange={setIsCreateCatalogDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Nuevo Cargo
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Crear Nuevo Cargo</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="nombre">Nombre del Cargo</Label>
+                        <Input
+                          id="nombre"
+                          value={nuevoCatalogoNombre}
+                          onChange={(e) => setNuevoCatalogoNombre(e.target.value)}
+                          placeholder="Ej: Presidente, Secretario, etc."
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="descripcion">Descripción (opcional)</Label>
+                        <Input
+                          id="descripcion"
+                          value={nuevoCatalogoDescripcion}
+                          onChange={(e) => setNuevoCatalogoDescripcion(e.target.value)}
+                          placeholder="Descripción del cargo..."
+                        />
+                      </div>
+                      <div className="flex justify-end space-x-2">
+                        <Button variant="outline" onClick={resetCreateCatalogForm}>
+                          Cancelar
+                        </Button>
+                        <Button
+                          onClick={createNewCatalog}
+                          disabled={!nuevoCatalogoNombre.trim()}
+                        >
+                          Crear Cargo
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Agregar Cargo
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Agregar Nuevo Cargo</DialogTitle>
@@ -191,7 +287,8 @@ export function PantallaGestionCargos({
                     </div>
                   </div>
                 </DialogContent>
-              </Dialog>
+                </Dialog>
+              </div>
             </div>
           </CardHeader>
           <CardContent>

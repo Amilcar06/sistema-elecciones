@@ -3,7 +3,8 @@ import { PantallaInicioElecciones } from "./components/PantallaInicioElecciones"
 import { PantallaGestionCargos } from "./components/PantallaGestionCargos";
 import { PantallaRegistroCandidatos } from "./components/PantallaRegistroCandidatos";
 import { PantallaIngresoResultados } from "./components/PantallaIngresoResultados";
-import { PantallaVisualizacionPublica } from "./components/PantallaVisualizacionPublica";
+import { PantallaVisualizacionResultados } from "./components/PantallaVisualizacionResultados";
+import { PantallaPublicaResultados } from "./components/PantallaPublicaResultados";
 import { PantallaResumenFinal } from "./components/PantallaResumenFinal";
 import { PantallaHistorialElecciones } from "./components/PantallaHistorialElecciones";
 
@@ -21,7 +22,7 @@ type Screen =
   | "positions"
   | "candidates"
   | "results"
-  | "public"
+  | "admin-results"
   | "summary"
   | "history";
 
@@ -31,6 +32,18 @@ export default function App() {
   const [currentPosition, setCurrentPosition] = useState<Cargo | null>(null);
   const [elections, setElections] = useState<Eleccion[]>([]);
   const [navigationHistory, setNavigationHistory] = useState<Screen[]>(["home"]);
+  const [publicMode, setPublicMode] = useState<{ electionId: number } | null>(null);
+
+  // Detectar modo público desde la URL
+  useEffect(() => {
+    const path = window.location.pathname;
+    const publicMatch = path.match(/^\/realtime\/(\d+)$/);
+    
+    if (publicMatch) {
+      const electionId = parseInt(publicMatch[1]);
+      setPublicMode({ electionId });
+    }
+  }, []);
 
   // Cargar elecciones al inicio
   useEffect(() => {
@@ -192,14 +205,14 @@ export default function App() {
             onUpdatePosition={(updatedPosition) => {
               setCurrentPosition(updatedPosition);
             }}
-            onPublicDisplay={() => navigateToScreen("public")}
+            onViewResults={() => navigateToScreen("admin-results")}
             onBack={navigateBack}
             onChangeElectionState={handleChangeElectionState}
           />
         );
-      case "public":
+      case "admin-results":
         return (
-          <PantallaVisualizacionPublica
+          <PantallaVisualizacionResultados
             election={currentElection}
             currentPosition={currentPosition}
             onNextPosition={(nextPosition) => {
@@ -243,12 +256,34 @@ export default function App() {
               setCurrentScreen("home");
               setNavigationHistory(["home"]);
             }}
+            onElectionUpdated={(updatedElection) => {
+              setElections(prev => 
+                prev.map(e => e.id_eleccion === updatedElection.id_eleccion ? updatedElection : e)
+              );
+            }}
+            onContinueElection={(election, targetScreen, position) => {
+              selectElection(election);
+              if (position) {
+                setCurrentPosition(position);
+              }
+              navigateToScreen(targetScreen as Screen);
+            }}
           />
         );
       default:
         return null;
     }
   };
+
+  // Si estamos en modo público, mostrar la pantalla pública
+  if (publicMode) {
+    return (
+      <PantallaPublicaResultados 
+        electionId={publicMode.electionId}
+        autoRefreshInterval={3000}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
