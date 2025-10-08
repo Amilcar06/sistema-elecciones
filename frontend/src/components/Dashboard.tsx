@@ -27,6 +27,9 @@ import { LoadingSpinner } from './ui/LoadingSpinner';
 import { useDebounce } from './ui/PerformanceOptimized';
 import { dashboardService } from '../services/dashboardService';
 import { Usuario } from '../api/types';
+import { AdvancedFilters, UsuarioFilters, EleccionFilters } from './AdvancedFilters';
+import { useToast } from '../hooks/useToast';
+import { ToastContainer } from './ui/Toast';
 
 // Componente para editar usuario
 interface EditUsuarioFormProps {
@@ -181,6 +184,9 @@ export const Dashboard: React.FC = () => {
   const [usuarioRol, setUsuarioRol] = useState('ALL');
   const [usuarioEstado, setUsuarioEstado] = useState('ALL');
 
+  // Hook de toast
+  const { toasts, success, error, removeToast } = useToast();
+
   useEffect(() => {
     loadDashboardData();
   }, []);
@@ -213,10 +219,10 @@ export const Dashboard: React.FC = () => {
     try {
       await dashboardService.deleteUsuario(id);
       setUsuarios(prev => prev.filter(u => u.id_usuario !== id));
-      alert('Usuario eliminado exitosamente');
+      success('Usuario eliminado exitosamente', 'El usuario ha sido eliminado correctamente');
     } catch (error) {
       console.error('Error eliminando usuario:', error);
-      alert('Error eliminando usuario');
+      error('Error eliminando usuario', 'No se pudo eliminar el usuario. Inténtalo de nuevo.');
     }
   }, []);
 
@@ -226,11 +232,11 @@ export const Dashboard: React.FC = () => {
     try {
       await dashboardService.deleteEleccion(id);
       setElecciones(prev => prev.filter(e => e.id_eleccion !== id));
-      alert('Elección eliminada exitosamente');
+      success('Elección eliminada exitosamente', 'La elección y todos sus datos relacionados han sido eliminados');
       loadDashboardData(); // Recargar stats
     } catch (error) {
       console.error('Error eliminando elección:', error);
-      alert('Error eliminando elección');
+      error('Error eliminando elección', 'No se pudo eliminar la elección. Inténtalo de nuevo.');
     }
   }, [loadDashboardData]);
 
@@ -249,10 +255,10 @@ export const Dashboard: React.FC = () => {
       ));
       setIsEditModalOpen(false);
       setEditingUsuario(null);
-      alert('Usuario actualizado exitosamente');
+      success('Usuario actualizado exitosamente', 'Los datos del usuario han sido actualizados correctamente');
     } catch (error) {
       console.error('Error actualizando usuario:', error);
-      alert('Error actualizando usuario');
+      error('Error actualizando usuario', 'No se pudo actualizar el usuario. Inténtalo de nuevo.');
     }
   }, [editingUsuario]);
 
@@ -546,13 +552,14 @@ export const Dashboard: React.FC = () => {
                       <TableCell>{eleccion._count.cargos}</TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Button size="sm" variant="outline">
+                          <Button size="sm" variant="outline" aria-label={`Ver detalles de elección ${eleccion.nombre}`}>
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button 
                             size="sm" 
                             variant="destructive"
                             onClick={() => handleDeleteEleccion(eleccion.id_eleccion)}
+                            aria-label={`Eliminar elección ${eleccion.nombre}`}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -637,6 +644,9 @@ export const Dashboard: React.FC = () => {
           )}
         </DialogContent>
       </Dialog>
+      
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 };

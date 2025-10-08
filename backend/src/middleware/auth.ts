@@ -75,7 +75,27 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     next();
   } catch (error) {
     console.error('Error en autenticación:', error);
-    return res.status(403).json({ error: 'Token inválido' });
+    
+    // Proporcionar mensajes de error más específicos
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ 
+        error: 'Token expirado', 
+        code: 'TOKEN_EXPIRED',
+        message: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.' 
+      });
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({ 
+        error: 'Token inválido', 
+        code: 'TOKEN_INVALID',
+        message: 'Token de autenticación no válido.' 
+      });
+    } else {
+      return res.status(403).json({ 
+        error: 'Error de autenticación', 
+        code: 'AUTH_ERROR',
+        message: 'Error interno de autenticación.' 
+      });
+    }
   }
 };
 

@@ -13,6 +13,8 @@ import {
   eliminarCandidato,
   Candidato
 } from '../services/candidatoService';
+import { useToast } from '../hooks/useToast';
+import { ToastContainer } from './ui/Toast';
 
 interface CandidateRegistrationProps {
   position: Cargo | null;
@@ -28,6 +30,9 @@ export function PantallaRegistroCandidatos({ position, onUpdatePosition, onStart
   const [candidatos, setCandidatos] = useState<Candidato[]>([]);
   const [loading, setLoading] = useState(false);
   const [nameError, setNameError] = useState('');
+  
+  // Hook de toast
+  const { toasts, success, error, removeToast } = useToast();
 
   // Cargar candidatos cuando cambie el cargo
   useEffect(() => {
@@ -103,7 +108,7 @@ export function PantallaRegistroCandidatos({ position, onUpdatePosition, onStart
       setIsDialogOpen(false);
     } catch (error) {
       console.error('Error creando candidato:', error);
-      alert('Error al crear candidato');
+      error('Error al crear candidato', 'No se pudo crear el candidato. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -140,7 +145,7 @@ export function PantallaRegistroCandidatos({ position, onUpdatePosition, onStart
       setIsDialogOpen(false);
     } catch (error) {
       console.error('Error actualizando candidato:', error);
-      alert('Error al actualizar candidato');
+      error('Error al actualizar candidato', 'No se pudo actualizar el candidato. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -153,7 +158,7 @@ export function PantallaRegistroCandidatos({ position, onUpdatePosition, onStart
       setCandidatos(prev => prev.filter(c => c.id_candidato !== candidatoId));
     } catch (error) {
       console.error('Error eliminando candidato:', error);
-      alert('Error al eliminar candidato');
+      error('Error al eliminar candidato', 'No se pudo eliminar el candidato. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -281,6 +286,7 @@ export function PantallaRegistroCandidatos({ position, onUpdatePosition, onStart
                         size="sm"
                         onClick={() => openEditDialog(candidate)}
                         disabled={loading}
+                        aria-label={`Editar candidato ${candidate.nombre}`}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -289,6 +295,7 @@ export function PantallaRegistroCandidatos({ position, onUpdatePosition, onStart
                         size="sm"
                         onClick={() => deleteCandidate(candidate.id_candidato)}
                         disabled={loading}
+                        aria-label={`Eliminar candidato ${candidate.nombre}`}
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -321,6 +328,9 @@ export function PantallaRegistroCandidatos({ position, onUpdatePosition, onStart
           )}
         </div>
       </div>
+      
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }

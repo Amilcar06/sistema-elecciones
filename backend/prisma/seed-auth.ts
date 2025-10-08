@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Iniciando seed de autenticación...');
 
-  // Crear usuario administrador por defecto
+  // Usuario Administrador
   const adminPassword = await bcrypt.hash('admin123', 12);
   
   const admin = await prisma.usuario.upsert({

@@ -20,6 +20,8 @@ import {
   actualizarResultado 
 } from '../services/resultadoService';
 import { cambiarEstadoEleccion } from '../services/eleccionService';
+import { useToast } from '../hooks/useToast';
+import { ToastContainer } from './ui/Toast';
 
 interface Ronda {
   id_ronda: number;
@@ -59,6 +61,9 @@ export function PantallaIngresoResultados({ position, election, onUpdatePosition
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showPublicUrl, setShowPublicUrl] = useState(false);
+  
+  // Hook de toast
+  const { toasts, success, error, removeToast } = useToast();
 
   // Cargar datos cuando cambie el cargo
   useEffect(() => {
@@ -154,7 +159,7 @@ export function PantallaIngresoResultados({ position, election, onUpdatePosition
     // Validación: verificar que al menos un candidato tenga votos > 0
     const totalVotes = Object.values(votes).reduce((sum, vote) => sum + vote, 0);
     if (totalVotes === 0) {
-      alert('Error: Debe ingresar al menos un voto. No se puede guardar con todos los candidatos en 0 votos.');
+      error('Error de validación', 'Debe ingresar al menos un voto. No se puede guardar con todos los candidatos en 0 votos.');
       return;
     }
     
@@ -173,10 +178,10 @@ export function PantallaIngresoResultados({ position, election, onUpdatePosition
       // Recargar datos
       await loadData();
       
-      alert('Resultados guardados exitosamente');
+      success('Resultados guardados exitosamente', 'Los votos han sido registrados correctamente');
     } catch (error) {
       console.error('Error guardando resultados:', error);
-      alert('Error al guardar resultados');
+      error('Error al guardar resultados', 'No se pudieron guardar los resultados. Inténtalo de nuevo.');
     } finally {
       setSaving(false);
     }
@@ -205,10 +210,10 @@ export function PantallaIngresoResultados({ position, election, onUpdatePosition
       setVotes(resetVotes);
       setResultados([]);
       
-      alert('Segunda ronda iniciada');
+      success('Segunda ronda iniciada', 'La segunda ronda ha comenzado correctamente');
     } catch (error) {
       console.error('Error iniciando segunda ronda:', error);
-      alert('Error al iniciar segunda ronda');
+      error('Error al iniciar segunda ronda', 'No se pudo iniciar la segunda ronda. Inténtalo de nuevo.');
     } finally {
       setSaving(false);
     }
@@ -239,10 +244,10 @@ export function PantallaIngresoResultados({ position, election, onUpdatePosition
         }
       }
       
-      alert('Primera ronda iniciada - Elección en curso');
+      success('Primera ronda iniciada - Elección en curso', 'La elección ha comenzado correctamente');
     } catch (error) {
       console.error('Error iniciando primera ronda:', error);
-      alert('Error al iniciar primera ronda');
+      error('Error al iniciar primera ronda', 'No se pudo iniciar la primera ronda. Inténtalo de nuevo.');
     } finally {
       setSaving(false);
     }
@@ -412,6 +417,9 @@ export function PantallaIngresoResultados({ position, election, onUpdatePosition
           </div>
         )}
       </div>
+      
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }

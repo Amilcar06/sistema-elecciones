@@ -1,4 +1,4 @@
-import React, { lazy } from 'react';
+import React, { lazy, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../contexts/AppContext';
 
@@ -13,8 +13,13 @@ export const CandidatesRoute: React.FC = () => {
   const navigate = useNavigate();
   const { currentPosition, setCurrentPosition } = useAppContext();
 
+  useEffect(() => {
+    if (!currentPosition) {
+      navigate('/positions');
+    }
+  }, [currentPosition, navigate]);
+
   if (!currentPosition) {
-    navigate('/positions');
     return null;
   }
 

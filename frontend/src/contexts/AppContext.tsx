@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Eleccion } from '../services/eleccionService';
 import { Cargo } from '../services/cargoService';
 import { getElecciones } from '../services/eleccionService';
+import { useAuth } from './AuthContext';
 
 interface AppContextType {
   // Estado de elecciones
@@ -42,19 +43,28 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [elections, setElections] = useState<Eleccion[]>([]);
   const [currentElection, setCurrentElection] = useState<Eleccion | null>(null);
   const [currentPosition, setCurrentPosition] = useState<Cargo | null>(null);
+  const { isAuthenticated, isLoading } = useAuth();
 
-  // Cargar elecciones al inicio
+  // Cargar elecciones solo cuando el usuario esté autenticado
   useEffect(() => {
+    if (!isAuthenticated || isLoading) {
+      return;
+    }
+
     const loadElections = async () => {
       try {
         const data = await getElecciones();
         setElections(data);
       } catch (error) {
         console.error("Error cargando elecciones", error);
+        // No mostrar error si es un problema de autenticación
+        if (error instanceof Error && !error.message.includes('401')) {
+          console.error("Error cargando elecciones", error);
+        }
       }
     };
     loadElections();
-  }, []);
+  }, [isAuthenticated, isLoading]);
 
   // Crear nueva elección
   const handleCreateElection = async (data: { nombre: string; descripcion?: string }) => {

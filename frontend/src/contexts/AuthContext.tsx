@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService } from '../services/authService';
 import { Usuario } from '../api/types';
+import { setAuthErrorHandler } from '../api/client';
+import { SessionExpiredModal } from '../components/SessionExpiredModal';
 
 // Usuario ya está importado desde api/types
 
@@ -28,6 +30,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showSessionExpired, setShowSessionExpired] = useState(false);
 
   const isAuthenticated = !!usuario && !!token;
   const isAdmin = usuario?.rol === 'ADMIN';
@@ -95,6 +98,43 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initAuth();
   }, []);
 
+  // Configurar el manejador de errores de autenticación solo cuando esté autenticado
+  useEffect(() => {
+    if (isAuthenticated) {
+      setAuthErrorHandler(() => {
+        console.log('Token expirado detectado, mostrando modal...');
+        setShowSessionExpired(true);
+      });
+    } else {
+      // Limpiar el manejador cuando no esté autenticado
+      setAuthErrorHandler(() => {});
+    }
+  }, [isAuthenticated]);
+
+  const handleTokenExpiration = () => {
+    // Limpiar estado local
+    setToken(null);
+    setUsuario(null);
+    
+    // Limpiar localStorage
+    authService.clearAuth();
+    
+    // Redirigir al login si no estamos ya ahí
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
+  };
+
+  const handleSessionExpiredClose = () => {
+    setShowSessionExpired(false);
+    handleTokenExpiration();
+  };
+
+  const handleSessionExpiredLogin = () => {
+    setShowSessionExpired(false);
+    window.location.href = '/login';
+  };
+
   const value: AuthContextType = {
     usuario,
     token,
@@ -112,6 +152,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   return (
     <AuthContext.Provider value={value}>
       {children}
+      <SessionExpiredModal
+        isOpen={showSessionExpired}
+        onClose={handleSessionExpiredClose}
+        onLogin={handleSessionExpiredLogin}
+      />
     </AuthContext.Provider>
   );
 };

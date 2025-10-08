@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -10,19 +10,71 @@ import {
   History, 
   LogOut, 
   User,
-  Shield
+  Shield,
+  Search
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { GlobalSearch } from './GlobalSearch';
 
 export const Navigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { usuario, logout, isAdmin, isOrganizador } = useAuth();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
+
+  // Manejo de teclas de acceso rápido
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Ctrl/Cmd + K para abrir búsqueda global
+      if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+        event.preventDefault();
+        setIsSearchOpen(true);
+      }
+      
+      // Escape para cerrar búsqueda
+      if (event.key === 'Escape' && isSearchOpen) {
+        setIsSearchOpen(false);
+      }
+      
+      // Teclas de acceso rápido para navegación
+      if (event.altKey) {
+        switch (event.key) {
+          case 'h':
+            event.preventDefault();
+            navigate('/');
+            break;
+          case 'd':
+            event.preventDefault();
+            navigate('/dashboard');
+            break;
+          case 'c':
+            event.preventDefault();
+            navigate('/candidates');
+            break;
+          case 'p':
+            event.preventDefault();
+            navigate('/positions');
+            break;
+          case 'r':
+            event.preventDefault();
+            navigate('/results');
+            break;
+          case 's':
+            event.preventDefault();
+            navigate('/summary');
+            break;
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [navigate, isSearchOpen]);
 
   const getRolBadgeVariant = (rol: string) => {
     switch (rol) {
@@ -61,16 +113,36 @@ export const Navigation: React.FC = () => {
 
         {/* Navegación principal */}
         <div className="flex items-center space-x-1" role="menubar">
+          {/* Botón de búsqueda global */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsSearchOpen(true)}
+            className="flex items-center space-x-2"
+            aria-label="Buscar en el sistema (Ctrl+K)"
+            title="Buscar en el sistema (Ctrl+K)"
+          >
+            <Search className="h-4 w-4" aria-hidden="true" />
+            <span className="hidden sm:inline">Buscar</span>
+            <kbd className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+              <span className="text-xs">⌘</span>K
+            </kbd>
+          </Button>
+
           <Button
             variant={isActive('/') ? 'default' : 'ghost'}
             size="sm"
             onClick={() => navigate('/')}
             className="flex items-center space-x-2"
             aria-current={isActive('/') ? 'page' : undefined}
-            aria-label="Ir a la página de inicio"
+            aria-label="Ir a la página de inicio (Alt+H)"
+            title="Ir a la página de inicio (Alt+H)"
           >
             <Home className="h-4 w-4" aria-hidden="true" />
             <span>Inicio</span>
+            <kbd className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+              Alt+H
+            </kbd>
           </Button>
 
           {isOrganizador && (
@@ -132,10 +204,14 @@ export const Navigation: React.FC = () => {
               onClick={() => navigate('/dashboard')}
               className="flex items-center space-x-2"
               aria-current={isActive('/dashboard') ? 'page' : undefined}
-              aria-label="Acceder al panel de administración"
+              aria-label="Acceder al panel de administración (Alt+D)"
+              title="Acceder al panel de administración (Alt+D)"
             >
               <Shield className="h-4 w-4" aria-hidden="true" />
               <span>Dashboard</span>
+              <kbd className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                Alt+D
+              </kbd>
             </Button>
           )}
         </div>
@@ -167,6 +243,12 @@ export const Navigation: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* Búsqueda global */}
+      <GlobalSearch
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
     </nav>
   );
 };

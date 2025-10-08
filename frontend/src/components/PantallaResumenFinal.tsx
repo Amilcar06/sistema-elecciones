@@ -8,6 +8,8 @@ import {
   generarReporte,
   cambiarEstadoEleccion 
 } from '../services/eleccionService';
+import { useToast } from '../hooks/useToast';
+import { ToastContainer } from './ui/Toast';
 
 interface GanadorFinal {
   id_cargo: number;
@@ -33,6 +35,9 @@ export function PantallaResumenFinal({ election, onBack, onHome, onChangeElectio
   const [ganadores, setGanadores] = useState<GanadorFinal[]>([]);
   const [loading, setLoading] = useState(false);
   const [generatingReport, setGeneratingReport] = useState(false);
+  
+  // Hook de toast
+  const { toasts, success, error, removeToast } = useToast();
 
   // Cargar resumen final cuando cambie la elección
   useEffect(() => {
@@ -84,10 +89,10 @@ export function PantallaResumenFinal({ election, onBack, onHome, onChangeElectio
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       
-      alert(`Reporte ${formato.toUpperCase()} generado exitosamente`);
+      success(`Reporte ${formato.toUpperCase()} generado exitosamente`, 'El reporte se ha descargado correctamente');
     } catch (error) {
       console.error('Error generando reporte:', error);
-      alert('Error al generar reporte');
+      error('Error al generar reporte', 'No se pudo generar el reporte. Inténtalo de nuevo.');
     } finally {
       setGeneratingReport(false);
     }
@@ -265,6 +270,9 @@ export function PantallaResumenFinal({ election, onBack, onHome, onChangeElectio
           </CardContent>
         </Card>
       </div>
+      
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }

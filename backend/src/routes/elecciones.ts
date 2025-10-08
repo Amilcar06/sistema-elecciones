@@ -44,7 +44,7 @@ router.get("/", async (req, res) => {
   try {
     const { estado, anio } = req.query;
 
-    const where: any = {};
+    const where: any = { deleted_at: null };
     if (estado) where.estado = String(estado);
     if (anio) {
       const anioNum = Number(anio);
@@ -90,8 +90,11 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const eleccion = await prisma.eleccion.findUnique({
-      where: { id_eleccion: Number(id) },
+    const eleccion = await prisma.eleccion.findFirst({
+      where: { 
+        id_eleccion: Number(id),
+        deleted_at: null
+      },
       include: { cargos: true },
     });
 
@@ -204,8 +207,11 @@ router.patch("/:id/estado", requireOrganizador, async (req, res) => {
 router.get("/:id/resultados-publicos", async (req, res) => {
   const { id } = req.params;
   try {
-    const eleccion = await prisma.eleccion.findUnique({
-      where: { id_eleccion: Number(id) },
+    const eleccion = await prisma.eleccion.findFirst({
+      where: { 
+        id_eleccion: Number(id),
+        deleted_at: null
+      },
       include: {
         cargos: {
           include: {

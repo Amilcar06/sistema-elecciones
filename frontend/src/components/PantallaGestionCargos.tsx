@@ -9,8 +9,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./ui/alert-dialog";
 import { Label } from "./ui/label";
-import { Plus, X, ArrowLeft, Users, ArrowRight, Link } from "lucide-react";
+import { Plus, X, ArrowLeft, Users, ArrowRight, Link, Edit, Trash2, AlertTriangle } from "lucide-react";
+import { useToast } from "../hooks/useToast";
+import { ToastContainer } from "./ui/Toast";
 
 import { Eleccion } from "../services/eleccionService";
 import {
@@ -19,7 +32,12 @@ import {
   crearCargo,
   eliminarCargo,
 } from "../services/cargoService";
-import { listarCatalogos, crearCatalogo } from "../services/catalogoCargoService";
+import { 
+  listarCatalogos, 
+  crearCatalogo, 
+  actualizarCatalogo,
+  eliminarCatalogo 
+} from "../services/catalogoCargoService";
 import { Input } from "./ui/input";
 import {
   Select,
@@ -51,6 +69,9 @@ export function PantallaGestionCargos({
   const [catalogos, setCatalogos] = useState<CatalogoCargo[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCreateCatalogDialogOpen, setIsCreateCatalogDialogOpen] = useState(false);
+  const [isEditCatalogDialogOpen, setIsEditCatalogDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { toasts, addToast, removeToast, success, error } = useToast();
 
   // Campos de formulario
   const [catalogoSeleccionado, setCatalogoSeleccionado] = useState<string>("");
@@ -58,23 +79,83 @@ export function PantallaGestionCargos({
   // Campos para crear nuevo catálogo
   const [nuevoCatalogoNombre, setNuevoCatalogoNombre] = useState<string>("");
   const [nuevoCatalogoDescripcion, setNuevoCatalogoDescripcion] = useState<string>("");
+  
+  // Campos para editar catálogo
+  const [editingCatalogo, setEditingCatalogo] = useState<CatalogoCargo | null>(null);
+  const [editCatalogoNombre, setEditCatalogoNombre] = useState<string>("");
+  const [editCatalogoDescripcion, setEditCatalogoDescripcion] = useState<string>("");
+  
+  // Validaciones
+  const [nombreError, setNombreError] = useState<string>("");
+  const [editNombreError, setEditNombreError] = useState<string>("");
 
   // Cargar cargos y catálogos
   useEffect(() => {
     if (election) {
-      getCargos(election.id_eleccion)
-        .then(setCargos)
-        .catch(console.error);
-      listarCatalogos().then(setCatalogos).catch(console.error);
+      loadData();
     }
   }, [election]);
 
+  const loadData = async () => {
+    if (!election) return;
+    try {
+      setLoading(true);
+      const [cargosData, catalogosData] = await Promise.all([
+        getCargos(election.id_eleccion),
+        listarCatalogos()
+      ]);
+      setCargos(cargosData);
+      setCatalogos(catalogosData);
+    } catch (err) {
+      console.error("Error cargando datos", err);
+      error("Error", "No se pudieron cargar los datos");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!election) return null;
+
+  // Validaciones
+  const validateNombre = (nombre: string): boolean => {
+    if (!nombre.trim()) {
+      setNombreError("El nombre es requerido");
+      return false;
+    }
+    if (nombre.trim().length < 2) {
+      setNombreError("El nombre debe tener al menos 2 caracteres");
+      return false;
+    }
+    if (catalogos.some(c => c.nombre.toLowerCase() === nombre.trim().toLowerCase())) {
+      setNombreError("Ya existe un cargo con este nombre");
+      return false;
+    }
+    setNombreError("");
+    return true;
+  };
+
+  const validateEditNombre = (nombre: string, catalogoId: number): boolean => {
+    if (!nombre.trim()) {
+      setEditNombreError("El nombre es requerido");
+      return false;
+    }
+    if (nombre.trim().length < 2) {
+      setEditNombreError("El nombre debe tener al menos 2 caracteres");
+      return false;
+    }
+    if (catalogos.some(c => c.id_catalogo !== catalogoId && c.nombre.toLowerCase() === nombre.trim().toLowerCase())) {
+      setEditNombreError("Ya existe un cargo con este nombre");
+      return false;
+    }
+    setEditNombreError("");
+    return true;
+  };
 
   const addCargo = async () => {
     if (!catalogoSeleccionado) return;
 
     try {
+      setLoading(true);
       const nuevoCargo = await crearCargo({
         id_eleccion: election.id_eleccion,
         id_catalogo: Number(catalogoSeleccionado),
@@ -83,17 +164,26 @@ export function PantallaGestionCargos({
       });
       setCargos((prev) => [...prev, nuevoCargo]);
       resetForm();
+      success("Éxito", "Cargo agregado correctamente");
     } catch (err) {
       console.error("Error creando cargo", err);
+      error("Error", "No se pudo agregar el cargo");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const deleteCargo = async (id_cargo: number) => {
+  const deleteCargo = async (id_cargo: number, cargoNombre: string) => {
     try {
+      setLoading(true);
       await eliminarCargo(id_cargo);
       setCargos((prev) => prev.filter((c) => c.id_cargo !== id_cargo));
+      success("Éxito", `Cargo "${cargoNombre}" eliminado correctamente`);
     } catch (err) {
       console.error("Error eliminando cargo", err);
+      error("Error", "No se pudo eliminar el cargo");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -106,21 +196,79 @@ export function PantallaGestionCargos({
     setIsCreateCatalogDialogOpen(false);
     setNuevoCatalogoNombre("");
     setNuevoCatalogoDescripcion("");
+    setNombreError("");
+  };
+
+  const resetEditCatalogForm = () => {
+    setIsEditCatalogDialogOpen(false);
+    setEditingCatalogo(null);
+    setEditCatalogoNombre("");
+    setEditCatalogoDescripcion("");
+    setEditNombreError("");
   };
 
   const createNewCatalog = async () => {
-    if (!nuevoCatalogoNombre.trim()) return;
+    if (!validateNombre(nuevoCatalogoNombre)) return;
 
     try {
+      setLoading(true);
       const nuevoCatalogo = await crearCatalogo(
         nuevoCatalogoNombre.trim(),
         nuevoCatalogoDescripcion.trim() || undefined
       );
       setCatalogos((prev) => [...prev, nuevoCatalogo]);
       resetCreateCatalogForm();
+      success("Éxito", "Cargo creado correctamente");
     } catch (err) {
       console.error("Error creando catálogo", err);
+      error("Error", "No se pudo crear el cargo");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const editCatalog = async () => {
+    if (!editingCatalogo || !validateEditNombre(editCatalogoNombre, editingCatalogo.id_catalogo)) return;
+
+    try {
+      setLoading(true);
+      const catalogoActualizado = await actualizarCatalogo(
+        editingCatalogo.id_catalogo,
+        editCatalogoNombre.trim(),
+        editCatalogoDescripcion.trim() || undefined
+      );
+      setCatalogos((prev) => 
+        prev.map(c => c.id_catalogo === editingCatalogo.id_catalogo ? catalogoActualizado : c)
+      );
+      resetEditCatalogForm();
+      success("Éxito", "Cargo actualizado correctamente");
+    } catch (err) {
+      console.error("Error actualizando catálogo", err);
+      error("Error", "No se pudo actualizar el cargo");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteCatalog = async (id_catalogo: number, catalogoNombre: string) => {
+    try {
+      setLoading(true);
+      await eliminarCatalogo(id_catalogo);
+      setCatalogos((prev) => prev.filter((c) => c.id_catalogo !== id_catalogo));
+      success("Éxito", `Cargo "${catalogoNombre}" eliminado del catálogo`);
+    } catch (err) {
+      console.error("Error eliminando catálogo", err);
+      error("Error", "No se pudo eliminar el cargo del catálogo");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openEditDialog = (catalogo: CatalogoCargo) => {
+    setEditingCatalogo(catalogo);
+    setEditCatalogoNombre(catalogo.nombre);
+    setEditCatalogoDescripcion(catalogo.descripcion || "");
+    setIsEditCatalogDialogOpen(true);
   };
 
   const getStatusBadge = (estado: Cargo["estado"]) => {
@@ -209,9 +357,16 @@ export function PantallaGestionCargos({
                         <Input
                           id="nombre"
                           value={nuevoCatalogoNombre}
-                          onChange={(e) => setNuevoCatalogoNombre(e.target.value)}
+                          onChange={(e) => {
+                            setNuevoCatalogoNombre(e.target.value);
+                            if (nombreError) setNombreError("");
+                          }}
                           placeholder="Ej: Presidente, Secretario, etc."
+                          className={nombreError ? "border-destructive" : ""}
                         />
+                        {nombreError && (
+                          <p className="text-sm text-destructive mt-1">{nombreError}</p>
+                        )}
                       </div>
                       <div>
                         <Label htmlFor="descripcion">Descripción (opcional)</Label>
@@ -228,9 +383,9 @@ export function PantallaGestionCargos({
                         </Button>
                         <Button
                           onClick={createNewCatalog}
-                          disabled={!nuevoCatalogoNombre.trim()}
+                          disabled={!nuevoCatalogoNombre.trim() || loading}
                         >
-                          Crear Cargo
+                          {loading ? "Creando..." : "Crear Cargo"}
                         </Button>
                       </div>
                     </div>
@@ -303,7 +458,7 @@ export function PantallaGestionCargos({
                 {cargos.map((cargo, index) => (
                   <div
                     key={cargo.id_cargo}
-                    className="flex items-center justify-between p-4 border rounded-lg"
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center space-x-4">
                       <span className="font-medium text-lg">{index + 1}.</span>
@@ -314,18 +469,66 @@ export function PantallaGestionCargos({
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2">
                       {getStatusBadge(cargo.estado)}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => deleteCargo(cargo.id_cargo)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                      
+                      {/* Botón Editar Cargo */}
+                      {cargo.catalogo && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEditDialog(cargo.catalogo!)}
+                          title="Editar cargo"
+                          aria-label={`Editar cargo ${cargo.catalogo?.nombre}`}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      )}
+                      
+                      {/* Botón Eliminar Cargo con Confirmación */}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            title="Eliminar cargo"
+                            aria-label={`Eliminar cargo ${cargo.catalogo?.nombre || 'sin nombre'}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="flex items-center gap-2">
+                              <AlertTriangle className="h-5 w-5 text-destructive" />
+                              Confirmar Eliminación
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              ¿Estás seguro de que deseas eliminar el cargo "{cargo.catalogo?.nombre || 'Cargo'}"?
+                              <br />
+                              <strong>Esta acción no se puede deshacer.</strong>
+                              <br />
+                              <br />
+                              Si este cargo tiene candidatos registrados, también se eliminarán.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteCargo(cargo.id_cargo, cargo.catalogo?.nombre || 'Cargo')}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Eliminar
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                      
                       <Button
                         size="sm"
                         onClick={() => onContinue(cargo)}
+                        disabled={loading}
                       >
                         Continuar <ArrowRight className="h-4 w-4 ml-1" />
                       </Button>
@@ -336,6 +539,56 @@ export function PantallaGestionCargos({
             )}
           </CardContent>
         </Card>
+
+        {/* Diálogo de Edición de Catálogo */}
+        <Dialog open={isEditCatalogDialogOpen} onOpenChange={setIsEditCatalogDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Cargo</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-nombre">Nombre del Cargo</Label>
+                <Input
+                  id="edit-nombre"
+                  value={editCatalogoNombre}
+                  onChange={(e) => {
+                    setEditCatalogoNombre(e.target.value);
+                    if (editNombreError) setEditNombreError("");
+                  }}
+                  placeholder="Ej: Presidente, Secretario, etc."
+                  className={editNombreError ? "border-destructive" : ""}
+                />
+                {editNombreError && (
+                  <p className="text-sm text-destructive mt-1">{editNombreError}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="edit-descripcion">Descripción (opcional)</Label>
+                <Input
+                  id="edit-descripcion"
+                  value={editCatalogoDescripcion}
+                  onChange={(e) => setEditCatalogoDescripcion(e.target.value)}
+                  placeholder="Descripción del cargo..."
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={resetEditCatalogForm}>
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={editCatalog}
+                  disabled={!editCatalogoNombre.trim() || loading}
+                >
+                  {loading ? "Actualizando..." : "Actualizar Cargo"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Toast Container */}
+        <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
       </div>
     </div>
   );

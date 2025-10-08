@@ -1,0 +1,471 @@
+import React, { useState, useEffect } from 'react';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from './ui/popover';
+import { Calendar } from './ui/calendar';
+import { 
+  Filter, 
+  X, 
+  Calendar as CalendarIcon,
+  Search,
+  RotateCcw,
+  ChevronDown
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+
+// Interfaces para los filtros
+export interface BaseFilters {
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface DateFilters {
+  fechaDesde?: string;
+  fechaHasta?: string;
+}
+
+export interface EleccionFilters extends BaseFilters, DateFilters {
+  estado?: string;
+  usuario?: string;
+}
+
+export interface CargoFilters extends BaseFilters {
+  estado?: string;
+  eleccion?: string;
+}
+
+export interface CandidatoFilters extends BaseFilters {
+  activo?: string;
+  cargo?: string;
+}
+
+export interface UsuarioFilters extends BaseFilters {
+  rol?: string;
+  estado?: string;
+}
+
+// Props del componente
+interface AdvancedFiltersProps {
+  type: 'elecciones' | 'cargos' | 'candidatos' | 'usuarios';
+  filters: any;
+  onFiltersChange: (filters: any) => void;
+  onClearFilters: () => void;
+  availableUsers?: Array<{ id: number; nombre: string; apellido: string; email: string }>;
+  availableElecciones?: Array<{ id_eleccion: number; nombre: string; estado: string }>;
+  availableCargos?: Array<{ id_cargo: number; nombre: string; estado: string }>;
+  className?: string;
+}
+
+export function AdvancedFilters({
+  type,
+  filters,
+  onFiltersChange,
+  onClearFilters,
+  availableUsers = [],
+  availableElecciones = [],
+  availableCargos = [],
+  className = ''
+}: AdvancedFiltersProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [localFilters, setLocalFilters] = useState(filters);
+
+  // Sincronizar filtros locales con los props
+  useEffect(() => {
+    setLocalFilters(filters);
+  }, [filters]);
+
+  const handleFilterChange = (key: string, value: any) => {
+    const newFilters = { ...localFilters, [key]: value };
+    setLocalFilters(newFilters);
+    onFiltersChange(newFilters);
+  };
+
+  const handleClearFilter = (key: string) => {
+    const newFilters = { ...localFilters };
+    delete newFilters[key];
+    setLocalFilters(newFilters);
+    onFiltersChange(newFilters);
+  };
+
+  const handleClearAll = () => {
+    setLocalFilters({});
+    onClearFilters();
+  };
+
+  const getActiveFiltersCount = () => {
+    return Object.keys(localFilters).filter(key => 
+      localFilters[key] !== undefined && 
+      localFilters[key] !== '' && 
+      localFilters[key] !== null
+    ).length;
+  };
+
+  const renderDateFilter = (label: string, key: 'fechaDesde' | 'fechaHasta') => {
+    const value = localFilters[key];
+    const date = value ? new Date(value) : undefined;
+
+    return (
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">{label}</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full justify-start text-left font-normal"
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {date ? format(date, 'dd/MM/yyyy', { locale: es }) : 'Seleccionar fecha'}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={(selectedDate) => {
+                handleFilterChange(key, selectedDate ? selectedDate.toISOString().split('T')[0] : undefined);
+              }}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+        {value && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleClearFilter(key)}
+            className="h-6 px-2 text-xs"
+          >
+            <X className="h-3 w-3 mr-1" />
+            Limpiar
+          </Button>
+        )}
+      </div>
+    );
+  };
+
+  const renderSelectFilter = (
+    label: string,
+    key: string,
+    options: Array<{ value: string; label: string }>,
+    placeholder: string
+  ) => {
+    return (
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">{label}</Label>
+        <Select
+          value={localFilters[key] || ''}
+          onValueChange={(value) => handleFilterChange(key, value || undefined)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={placeholder} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Todos</SelectItem>
+            {options.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {localFilters[key] && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleClearFilter(key)}
+            className="h-6 px-2 text-xs"
+          >
+            <X className="h-3 w-3 mr-1" />
+            Limpiar
+          </Button>
+        )}
+      </div>
+    );
+  };
+
+  const renderFilters = () => {
+    switch (type) {
+      case 'elecciones':
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Búsqueda */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Búsqueda</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nombre o descripción..."
+                  value={localFilters.search || ''}
+                  onChange={(e) => handleFilterChange('search', e.target.value || undefined)}
+                  className="pl-10"
+                />
+              </div>
+              {localFilters.search && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleClearFilter('search')}
+                  className="h-6 px-2 text-xs"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Limpiar
+                </Button>
+              )}
+            </div>
+
+            {/* Estado */}
+            {renderSelectFilter(
+              'Estado',
+              'estado',
+              [
+                { value: 'DRAFT', label: 'Borrador' },
+                { value: 'EN_CURSO', label: 'En Curso' },
+                { value: 'FINALIZADA', label: 'Finalizada' }
+              ],
+              'Todos los estados'
+            )}
+
+            {/* Usuario creador */}
+            {renderSelectFilter(
+              'Usuario Creador',
+              'usuario',
+              availableUsers.map(user => ({
+                value: user.id.toString(),
+                label: `${user.nombre} ${user.apellido}`
+              })),
+              'Todos los usuarios'
+            )}
+
+            {/* Fecha desde */}
+            {renderDateFilter('Fecha desde', 'fechaDesde')}
+
+            {/* Fecha hasta */}
+            {renderDateFilter('Fecha hasta', 'fechaHasta')}
+          </div>
+        );
+
+      case 'cargos':
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Búsqueda */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Búsqueda</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nombre de cargo..."
+                  value={localFilters.search || ''}
+                  onChange={(e) => handleFilterChange('search', e.target.value || undefined)}
+                  className="pl-10"
+                />
+              </div>
+              {localFilters.search && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleClearFilter('search')}
+                  className="h-6 px-2 text-xs"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Limpiar
+                </Button>
+              )}
+            </div>
+
+            {/* Estado */}
+            {renderSelectFilter(
+              'Estado',
+              'estado',
+              [
+                { value: 'PENDIENTE', label: 'Pendiente' },
+                { value: 'EN_PROCESO', label: 'En Proceso' },
+                { value: 'FINALIZADO', label: 'Finalizado' }
+              ],
+              'Todos los estados'
+            )}
+
+            {/* Elección */}
+            {renderSelectFilter(
+              'Elección',
+              'eleccion',
+              availableElecciones.map(eleccion => ({
+                value: eleccion.id_eleccion.toString(),
+                label: eleccion.nombre
+              })),
+              'Todas las elecciones'
+            )}
+          </div>
+        );
+
+      case 'candidatos':
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Búsqueda */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Búsqueda</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nombre de candidato..."
+                  value={localFilters.search || ''}
+                  onChange={(e) => handleFilterChange('search', e.target.value || undefined)}
+                  className="pl-10"
+                />
+              </div>
+              {localFilters.search && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleClearFilter('search')}
+                  className="h-6 px-2 text-xs"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Limpiar
+                </Button>
+              )}
+            </div>
+
+            {/* Estado */}
+            {renderSelectFilter(
+              'Estado',
+              'activo',
+              [
+                { value: 'true', label: 'Activo' },
+                { value: 'false', label: 'Inactivo' }
+              ],
+              'Todos los estados'
+            )}
+
+            {/* Cargo */}
+            {renderSelectFilter(
+              'Cargo',
+              'cargo',
+              availableCargos.map(cargo => ({
+                value: cargo.id_cargo.toString(),
+                label: cargo.nombre
+              })),
+              'Todos los cargos'
+            )}
+          </div>
+        );
+
+      case 'usuarios':
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Búsqueda */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Búsqueda</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nombre o email..."
+                  value={localFilters.search || ''}
+                  onChange={(e) => handleFilterChange('search', e.target.value || undefined)}
+                  className="pl-10"
+                />
+              </div>
+              {localFilters.search && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleClearFilter('search')}
+                  className="h-6 px-2 text-xs"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Limpiar
+                </Button>
+              )}
+            </div>
+
+            {/* Rol */}
+            {renderSelectFilter(
+              'Rol',
+              'rol',
+              [
+                { value: 'ADMIN', label: 'Administrador' },
+                { value: 'ORGANIZADOR', label: 'Organizador' },
+                { value: 'OBSERVADOR', label: 'Observador' }
+              ],
+              'Todos los roles'
+            )}
+
+            {/* Estado */}
+            {renderSelectFilter(
+              'Estado',
+              'estado',
+              [
+                { value: 'ACTIVO', label: 'Activo' },
+                { value: 'INACTIVO', label: 'Inactivo' }
+              ],
+              'Todos los estados'
+            )}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const activeFiltersCount = getActiveFiltersCount();
+
+  return (
+    <div className={className}>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="w-full justify-between">
+            <div className="flex items-center space-x-2">
+              <Filter className="h-4 w-4" />
+              <span>Filtros</span>
+              {activeFiltersCount > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {activeFiltersCount}
+                </Badge>
+              )}
+            </div>
+            <ChevronDown className="h-4 w-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-96 p-0" align="start">
+          <Card className="border-0 shadow-none">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Filtros Avanzados</CardTitle>
+                {activeFiltersCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleClearAll}
+                    className="h-8 px-2 text-xs"
+                  >
+                    <RotateCcw className="h-3 w-3 mr-1" />
+                    Limpiar todo
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {renderFilters()}
+            </CardContent>
+          </Card>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
