@@ -1,29 +1,32 @@
 // src/services/catalogoCargoService.ts
-import { API_URL } from "../api";
+import { apiClient } from "../api/client";
 
 // Listar todos los catálogos de cargo
 export async function listarCatalogos() {
-  const res = await fetch(`${API_URL}/catalogo-cargos`);
-  if (!res.ok) throw new Error("Error al listar los catálogos");
-  return res.json();
+  try {
+    return await apiClient.get('/catalogo-cargos');
+  } catch (error) {
+    throw new Error("Error al listar los catálogos");
+  }
 }
 
 // Obtener un catálogo por ID
 export async function obtenerCatalogo(id_catalogo: number) {
-  const res = await fetch(`${API_URL}/catalogo-cargos/${id_catalogo}`);
-  if (!res.ok) throw new Error("Error al obtener el catálogo");
-  return res.json();
+  try {
+    return await apiClient.get(`/catalogo-cargos/${id_catalogo}`);
+  } catch (error) {
+    throw new Error("Error al obtener el catálogo");
+  }
 }
 
 // Crear un catálogo de cargo
 export async function crearCatalogo(nombre: string, descripcion?: string) {
-  const res = await fetch(`${API_URL}/catalogo-cargos`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nombre, descripcion }),
-  });
-  if (!res.ok) throw new Error("Error al crear el catálogo");
-  return res.json();
+  try {
+    const data = { nombre, descripcion };
+    return await apiClient.post('/catalogo-cargos', data);
+  } catch (error) {
+    throw new Error("Error al crear el catálogo");
+  }
 }
 
 // Actualizar un catálogo de cargo
@@ -32,20 +35,19 @@ export async function actualizarCatalogo(
   nombre: string,
   descripcion?: string
 ) {
-  const res = await fetch(`${API_URL}/catalogo-cargos/${id_catalogo}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nombre, descripcion }),
-  });
-  if (!res.ok) throw new Error("Error al actualizar el catálogo");
-  return res.json();
+  try {
+    const data = { nombre, descripcion };
+    return await apiClient.put(`/catalogo-cargos/${id_catalogo}`, data);
+  } catch (error) {
+    throw new Error("Error al actualizar el catálogo");
+  }
 }
 
 // Eliminar un catálogo de cargo
 export async function eliminarCatalogo(id_catalogo: number) {
-  const res = await fetch(`${API_URL}/catalogo-cargos/${id_catalogo}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Error al eliminar el catálogo");
-  return res.json();
+  try {
+    return await apiClient.delete(`/catalogo-cargos/${id_catalogo}`);
+  } catch (error) {
+    throw new Error("Error al eliminar el catálogo");
+  }
 }

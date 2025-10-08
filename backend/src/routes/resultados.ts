@@ -1,7 +1,11 @@
 import { Router } from "express";
 import prisma from "../prisma";
+import { authenticateToken, requireOrganizador } from "../middleware/auth";
 
 const router = Router();
+
+// Aplicar autenticación a todas las rutas
+router.use(authenticateToken);
 
 /**
  * GET /api/resultados/rondas/:idRonda
@@ -26,7 +30,7 @@ router.get("/rondas/:idRonda", async (req, res) => {
  * Registrar votos de varios candidatos en la ronda
  * body: [ { id_candidato, votos } ]
  */
-router.post("/rondas/:idRonda", async (req, res) => {
+router.post("/rondas/:idRonda", requireOrganizador, async (req, res) => {
   try {
     const { idRonda } = req.params;
     const resultados: { id_candidato: number; votos: number }[] = req.body;
@@ -53,7 +57,7 @@ router.post("/rondas/:idRonda", async (req, res) => {
  * PUT /api/resultados/:id
  * Actualizar votos de un resultado
  */
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireOrganizador, async (req, res) => {
   try {
     const { id } = req.params;
     const { votos } = req.body;
@@ -73,7 +77,7 @@ router.put("/:id", async (req, res) => {
  * DELETE /api/resultados/:id
  * Eliminar resultado
  */
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireOrganizador, async (req, res) => {
   try {
     const { id } = req.params;
 

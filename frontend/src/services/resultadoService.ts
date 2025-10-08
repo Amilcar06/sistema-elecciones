@@ -1,18 +1,22 @@
 // src/services/resultadoService.ts
-import { API_URL } from "../api";
+import { apiClient } from "../api/client";
 
 // Listar resultados de una ronda específica
 export async function listarResultados(rondaId: number) {
-  const res = await fetch(`${API_URL}/resultados/rondas/${rondaId}`);
-  if (!res.ok) throw new Error("Error al listar resultados");
-  return res.json();
+  try {
+    return await apiClient.get(`/resultados/rondas/${rondaId}`);
+  } catch (error) {
+    throw new Error("Error al listar resultados");
+  }
 }
 
 // Obtener un resultado por ID
 export async function obtenerResultado(id_resultado: number) {
-  const res = await fetch(`${API_URL}/resultados/${id_resultado}`);
-  if (!res.ok) throw new Error("Error al obtener resultado");
-  return res.json();
+  try {
+    return await apiClient.get(`/resultados/${id_resultado}`);
+  } catch (error) {
+    throw new Error("Error al obtener resultado");
+  }
 }
 
 // Registrar resultados de una ronda (múltiples candidatos)
@@ -20,13 +24,11 @@ export async function crearResultado(
   id_ronda: number,
   resultados: { id_candidato: number; votos: number }[]
 ) {
-  const res = await fetch(`${API_URL}/resultados/rondas/${id_ronda}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(resultados),
-  });
-  if (!res.ok) throw new Error("Error al registrar resultados");
-  return res.json();
+  try {
+    return await apiClient.post(`/resultados/rondas/${id_ronda}`, resultados);
+  } catch (error) {
+    throw new Error("Error al registrar resultados");
+  }
 }
 
 // Actualizar resultado individual
@@ -34,20 +36,18 @@ export async function actualizarResultado(
   id_resultado: number,
   votos: number
 ) {
-  const res = await fetch(`${API_URL}/resultados/${id_resultado}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ votos }),
-  });
-  if (!res.ok) throw new Error("Error al actualizar resultado");
-  return res.json();
+  try {
+    return await apiClient.put(`/resultados/${id_resultado}`, { votos });
+  } catch (error) {
+    throw new Error("Error al actualizar resultado");
+  }
 }
 
 // Eliminar resultado
 export async function eliminarResultado(id_resultado: number) {
-  const res = await fetch(`${API_URL}/resultados/${id_resultado}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Error al eliminar resultado");
-  return res.json();
+  try {
+    return await apiClient.delete(`/resultados/${id_resultado}`);
+  } catch (error) {
+    throw new Error("Error al eliminar resultado");
+  }
 }

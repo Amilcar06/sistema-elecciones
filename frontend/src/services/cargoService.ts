@@ -1,4 +1,4 @@
-import { API_URL } from "../api";
+import { apiClient } from "../api/client";
 
 export interface Cargo {
   id_cargo: number;
@@ -18,19 +18,21 @@ export interface Cargo {
 
 // Listar todos (opcional filtrar por eleccionId)
 export async function getCargos(eleccionId?: number): Promise<Cargo[]> {
-  const url = eleccionId
-    ? `${API_URL}/cargos?id_eleccion=${eleccionId}`
-    : `${API_URL}/cargos`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Error al obtener cargos");
-  return res.json();
+  try {
+    const endpoint = eleccionId ? `/cargos?id_eleccion=${eleccionId}` : '/cargos';
+    return await apiClient.get(endpoint);
+  } catch (error) {
+    throw new Error("Error al obtener cargos");
+  }
 }
 
 // Obtener un cargo
 export async function getCargo(id_cargo: number): Promise<Cargo> {
-  const res = await fetch(`${API_URL}/cargos/${id_cargo}`);
-  if (!res.ok) throw new Error("Error al obtener cargo");
-  return res.json();
+  try {
+    return await apiClient.get(`/cargos/${id_cargo}`);
+  } catch (error) {
+    throw new Error("Error al obtener cargo");
+  }
 }
 
 // Crear un cargo
@@ -40,13 +42,11 @@ export async function crearCargo(data: {
   orden?: number;
   estado?: "PENDIENTE" | "EN_PROCESO" | "FINALIZADO";
 }): Promise<Cargo> {
-  const res = await fetch(`${API_URL}/cargos`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Error al crear cargo");
-  return res.json();
+  try {
+    return await apiClient.post('/cargos', data);
+  } catch (error) {
+    throw new Error("Error al crear cargo");
+  }
 }
 
 // Actualizar un cargo
@@ -57,26 +57,27 @@ export async function actualizarCargo(
     orden?: number;
   }
 ): Promise<Cargo> {
-  const res = await fetch(`${API_URL}/cargos/${id_cargo}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Error al actualizar cargo");
-  return res.json();
+  try {
+    return await apiClient.put(`/cargos/${id_cargo}`, data);
+  } catch (error) {
+    throw new Error("Error al actualizar cargo");
+  }
 }
 
 // Eliminar un cargo
 export async function eliminarCargo(id_cargo: number): Promise<void> {
-  const res = await fetch(`${API_URL}/cargos/${id_cargo}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Error al eliminar cargo");
+  try {
+    await apiClient.delete(`/cargos/${id_cargo}`);
+  } catch (error) {
+    throw new Error("Error al eliminar cargo");
+  }
 }
 
 // Listar cargos de una elección (ordenados)
 export async function getCargosPorEleccion(id_eleccion: number): Promise<Cargo[]> {
-  const res = await fetch(`${API_URL}/cargos?id_eleccion=${id_eleccion}`);
-  if (!res.ok) throw new Error("Error al obtener cargos de la elección");
-  return res.json();
+  try {
+    return await apiClient.get(`/cargos?id_eleccion=${id_eleccion}`);
+  } catch (error) {
+    throw new Error("Error al obtener cargos de la elección");
+  }
 }

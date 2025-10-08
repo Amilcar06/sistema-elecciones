@@ -1,4 +1,4 @@
-import { API_URL } from "../api";
+import { apiClient } from "../api/client";
 
 export interface Publicacion {
   id_publicacion: number;

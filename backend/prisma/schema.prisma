@@ -7,28 +7,83 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Usuario {
+  id_usuario         Int           @id @default(autoincrement())
+  email              String        @unique @db.VarChar(255)
+  nombre             String        @db.VarChar(100)
+  apellido           String        @db.VarChar(100)
+  password_hash      String        @db.VarChar(255)
+  rol                RolUsuario    @default(ORGANIZADOR)
+  estado             EstadoUsuario @default(ACTIVO)
+  ultimo_acceso      DateTime?
+  created_at         DateTime      @default(now())
+  updated_at         DateTime      @updatedAt
+  deleted_at         DateTime?
+  auditorias         Auditoria[]
+  elecciones_creadas Eleccion[]
+  sesiones           Sesion[]
+
+  @@index([rol], map: "idx_usuario_rol")
+  @@index([estado], map: "idx_usuario_estado")
+}
+
+model Sesion {
+  id_sesion  Int      @id @default(autoincrement())
+  id_usuario Int
+  token      String   @db.VarChar(500)
+  expires_at DateTime
+  ip_address String?  @db.VarChar(45)
+  user_agent String?
+  created_at DateTime @default(now())
+  usuario    Usuario  @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+
+  @@index([token], map: "idx_sesion_token")
+  @@index([id_usuario], map: "idx_sesion_usuario")
+}
+
+model Auditoria {
+  id_auditoria     Int      @id @default(autoincrement())
+  tabla            String   @db.VarChar(50)
+  accion           String   @db.VarChar(20)
+  id_registro      Int
+  datos_anteriores Json?
+  datos_nuevos     Json?
+  id_usuario       Int?
+  ip_address       String?  @db.VarChar(45)
+  created_at       DateTime @default(now())
+  usuario          Usuario? @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@index([tabla, accion], map: "idx_auditoria_tabla_accion")
+  @@index([id_usuario], map: "idx_auditoria_usuario")
+}
+
 model Eleccion {
-  id_eleccion   Int                    @id @default(autoincrement())
-  nombre        String                 @db.VarChar(100)
-  fecha         DateTime
-  estado        EstadoEleccion         @default(DRAFT)
-  descripcion   String?
-  created_at    DateTime               @default(now())
-  updated_at    DateTime               @updatedAt
-  cargos        Cargo[]
-  publicaciones PublicacionResultado[]
+  id_eleccion        Int                    @id @default(autoincrement())
+  nombre             String                 @db.VarChar(100)
+  fecha              DateTime
+  estado             EstadoEleccion         @default(DRAFT)
+  descripcion        String?
+  created_at         DateTime               @default(now())
+  updated_at         DateTime               @updatedAt
+  deleted_at         DateTime?
+  id_usuario_creador Int?
+  cargos             Cargo[]
+  usuario_creador    Usuario?               @relation(fields: [id_usuario_creador], references: [id_usuario])
+  publicaciones      PublicacionResultado[]
 
   @@index([fecha], map: "idx_eleccion_fecha")
   @@index([estado], map: "idx_eleccion_estado")
   @@index([fecha, estado], map: "idx_eleccion_fecha_estado")
+  @@index([id_usuario_creador], map: "idx_eleccion_usuario_creador")
 }
 
 model CatalogoCargo {
-  id_catalogo Int      @id @default(autoincrement())
-  nombre      String   @unique @db.VarChar(50)
+  id_catalogo Int       @id @default(autoincrement())
+  nombre      String    @unique @db.VarChar(50)
   descripcion String?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @default(now()) @updatedAt
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @default(now()) @updatedAt
+  deleted_at  DateTime?
   cargos      Cargo[]
 }
 
@@ -40,6 +95,7 @@ model Cargo {
   orden       Int
   created_at  DateTime      @default(now())
   updated_at  DateTime      @updatedAt
+  deleted_at  DateTime?
   candidatos  Candidato[]
   catalogo    CatalogoCargo @relation(fields: [id_catalogo], references: [id_catalogo])
   eleccion    Eleccion      @relation(fields: [id_eleccion], references: [id_eleccion])
@@ -58,6 +114,7 @@ model Candidato {
   activo          Boolean     @default(true)
   created_at      DateTime    @default(now())
   updated_at      DateTime    @updatedAt
+  deleted_at      DateTime?
   cargo           Cargo       @relation(fields: [id_cargo], references: [id_cargo])
   resultados      Resultado[]
 
@@ -73,6 +130,7 @@ model Ronda {
   fecha_registro DateTime    @default(now())
   finalizada     Boolean     @default(false)
   observaciones  String?
+  deleted_at     DateTime?
   resultados     Resultado[]
   cargo          Cargo       @relation(fields: [id_cargo], references: [id_cargo])
 
@@ -89,6 +147,7 @@ model Resultado {
   registrado_por String?   @db.VarChar(50)
   created_at     DateTime  @default(now())
   updated_at     DateTime  @default(now()) @updatedAt
+  deleted_at     DateTime?
   candidato      Candidato @relation(fields: [id_candidato], references: [id_candidato])
   ronda          Ronda     @relation(fields: [id_ronda], references: [id_ronda])
 
@@ -105,6 +164,7 @@ model PublicacionResultado {
   fecha_publicacion DateTime        @default(now())
   modo              ModoPublicacion @default(PROYECTOR)
   nota              String?
+  deleted_at        DateTime?
   eleccion          Eleccion        @relation(fields: [id_eleccion], references: [id_eleccion])
 
   @@index([id_eleccion], map: "idx_publicacion_eleccion")
@@ -126,4 +186,16 @@ enum ModoPublicacion {
   PROYECTOR
   PDF
   EXCEL
+}
+
+enum RolUsuario {
+  ADMIN
+  ORGANIZADOR
+  OBSERVADOR
+}
+
+enum EstadoUsuario {
+  ACTIVO
+  INACTIVO
+  SUSPENDIDO
 }

@@ -1,5 +1,5 @@
 // src/services/candidatoService.ts
-import { API_URL } from "../api";
+import { apiClient } from "../api/client";
 
 export interface Candidato {
   id_candidato: number;
@@ -11,20 +11,22 @@ export interface Candidato {
 }
 
 // Listar candidatos (opcional por cargo)
-export async function listarCandidatos(cargoId?: number) {
-  const url = cargoId
-    ? `${API_URL}/candidatos?id_cargo=${cargoId}`
-    : `${API_URL}/candidatos`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Error al listar candidatos");
-  return res.json();
+export async function listarCandidatos(cargoId?: number): Promise<Candidato[]> {
+  try {
+    const endpoint = cargoId ? `/candidatos?id_cargo=${cargoId}` : '/candidatos';
+    return await apiClient.get<Candidato[]>(endpoint);
+  } catch (error) {
+    throw new Error("Error al listar candidatos");
+  }
 }
 
 // Obtener un candidato por ID
-export async function obtenerCandidato(id_candidato: number) {
-  const res = await fetch(`${API_URL}/candidatos/${id_candidato}`);
-  if (!res.ok) throw new Error("Error al obtener candidato");
-  return res.json();
+export async function obtenerCandidato(id_candidato: number): Promise<Candidato> {
+  try {
+    return await apiClient.get<Candidato>(`/candidatos/${id_candidato}`);
+  } catch (error) {
+    throw new Error("Error al obtener candidato");
+  }
 }
 
 // Registrar candidato
@@ -32,14 +34,13 @@ export async function crearCandidato(
   id_cargo: number,
   nombre_completo: string,
   activo = true
-) {
-  const res = await fetch(`${API_URL}/candidatos`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id_cargo, nombre: nombre_completo, activo }),
-  });
-  if (!res.ok) throw new Error("Error al registrar candidato");
-  return res.json();
+): Promise<Candidato> {
+  try {
+    const data = { id_cargo, nombre: nombre_completo, activo };
+    return await apiClient.post<Candidato>('/candidatos', data);
+  } catch (error) {
+    throw new Error("Error al registrar candidato");
+  }
 }
 
 // Actualizar candidato
@@ -48,21 +49,20 @@ export async function actualizarCandidato(
   id_cargo: number,
   nombre_completo: string,
   activo = true
-) {
-  const res = await fetch(`${API_URL}/candidatos/${id_candidato}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nombre: nombre_completo, activo }),
-  });
-  if (!res.ok) throw new Error("Error al actualizar candidato");
-  return res.json();
+): Promise<Candidato> {
+  try {
+    const data = { nombre: nombre_completo, activo };
+    return await apiClient.put<Candidato>(`/candidatos/${id_candidato}`, data);
+  } catch (error) {
+    throw new Error("Error al actualizar candidato");
+  }
 }
 
 // Eliminar candidato
-export async function eliminarCandidato(id_candidato: number) {
-  const res = await fetch(`${API_URL}/candidatos/${id_candidato}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Error al eliminar candidato");
-  return res.json();
+export async function eliminarCandidato(id_candidato: number): Promise<{ message: string }> {
+  try {
+    return await apiClient.delete<{ message: string }>(`/candidatos/${id_candidato}`);
+  } catch (error) {
+    throw new Error("Error al eliminar candidato");
+  }
 }

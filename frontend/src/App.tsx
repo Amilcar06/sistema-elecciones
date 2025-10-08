@@ -1,7 +1,13 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AppProvider } from "./contexts/AppContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import { LazyRouteWrapper } from "./components/LazyRouteWrapper";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { LoginForm } from "./components/LoginForm";
+import { UnauthorizedPage } from "./components/UnauthorizedPage";
+import { Dashboard } from "./components/Dashboard";
+import { Navigation } from "./components/Navigation";
 import { usePreloadRoutes } from "./hooks/usePreloadRoutes";
 
 // Importar rutas (ahora con lazy loading)
@@ -20,64 +26,94 @@ const AppRoutes: React.FC = () => {
   
   return (
     <div className="min-h-screen bg-background">
-          <Routes>
-            {/* Rutas principales con lazy loading */}
-            <Route path="/" element={
-              <LazyRouteWrapper>
-                <HomeRoute />
-              </LazyRouteWrapper>
-            } />
-            <Route path="/positions" element={
-              <LazyRouteWrapper>
-                <PositionsRoute />
-              </LazyRouteWrapper>
-            } />
-            <Route path="/candidates" element={
-              <LazyRouteWrapper>
-                <CandidatesRoute />
-              </LazyRouteWrapper>
-            } />
-            <Route path="/results" element={
-              <LazyRouteWrapper>
-                <ResultsRoute />
-              </LazyRouteWrapper>
-            } />
-            <Route path="/admin-results" element={
-              <LazyRouteWrapper>
-                <AdminResultsRoute />
-              </LazyRouteWrapper>
-            } />
-            <Route path="/summary" element={
-              <LazyRouteWrapper>
-                <SummaryRoute />
-              </LazyRouteWrapper>
-            } />
-            <Route path="/history" element={
-              <LazyRouteWrapper>
-                <HistoryRoute />
-              </LazyRouteWrapper>
-            } />
+      <Navigation />
+      <Routes>
+            {/* Rutas públicas */}
+            <Route path="/login" element={<LoginForm />} />
+            <Route path="/unauthorized" element={<UnauthorizedPage />} />
             
-            {/* Ruta pública con lazy loading */}
+            {/* Ruta pública de resultados */}
             <Route path="/realtime/:electionId" element={
               <LazyRouteWrapper>
                 <PublicResultsRoute />
               </LazyRouteWrapper>
             } />
             
+            {/* Rutas protegidas - Requieren autenticación */}
+            <Route path="/" element={
+              <ProtectedRoute>
+                <LazyRouteWrapper>
+                  <HomeRoute />
+                </LazyRouteWrapper>
+              </ProtectedRoute>
+            } />
+            <Route path="/positions" element={
+              <ProtectedRoute>
+                <LazyRouteWrapper>
+                  <PositionsRoute />
+                </LazyRouteWrapper>
+              </ProtectedRoute>
+            } />
+            <Route path="/candidates" element={
+              <ProtectedRoute>
+                <LazyRouteWrapper>
+                  <CandidatesRoute />
+                </LazyRouteWrapper>
+              </ProtectedRoute>
+            } />
+            <Route path="/results" element={
+              <ProtectedRoute>
+                <LazyRouteWrapper>
+                  <ResultsRoute />
+                </LazyRouteWrapper>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin-results" element={
+              <ProtectedRoute>
+                <LazyRouteWrapper>
+                  <AdminResultsRoute />
+                </LazyRouteWrapper>
+              </ProtectedRoute>
+            } />
+            <Route path="/summary" element={
+              <ProtectedRoute>
+                <LazyRouteWrapper>
+                  <SummaryRoute />
+                </LazyRouteWrapper>
+              </ProtectedRoute>
+            } />
+            <Route path="/history" element={
+              <ProtectedRoute>
+                <LazyRouteWrapper>
+                  <HistoryRoute />
+                </LazyRouteWrapper>
+              </ProtectedRoute>
+            } />
+            
+            {/* Dashboard - Solo para organizadores y admins */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute organizadorOnly>
+                <LazyRouteWrapper>
+                  <Dashboard />
+                </LazyRouteWrapper>
+              </ProtectedRoute>
+            } />
+            
             {/* Redirección por defecto */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-    </div>
+        </div>
   );
 };
 
 export default function App() {
   return (
-    <AppProvider>
-      <Router>
-        <AppRoutes />
-      </Router>
-    </AppProvider>
+    <AuthProvider>
+      <AppProvider>
+        <Router>
+          <AppRoutes />
+        </Router>
+      </AppProvider>
+    </AuthProvider>
   );
 }

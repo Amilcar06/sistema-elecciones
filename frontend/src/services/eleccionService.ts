@@ -1,4 +1,5 @@
-import { API_URL } from "../api";
+import { apiClient } from "../api/client";
+import { EstadoEleccion } from "../api/types";
 
 export interface Eleccion {
   id_eleccion: number;
@@ -6,7 +7,7 @@ export interface Eleccion {
   fecha: string;        // en formato ISO
   anio?: number;
   descripcion?: string;
-  estado: "DRAFT" | "EN_CURSO" | "FINALIZADA";
+  estado: EstadoEleccion;
   created_at?: string;
   updated_at?: string;
   cargos?: any[];       // puedes tipar mejor según tu modelo
@@ -14,48 +15,57 @@ export interface Eleccion {
 
 // Obtener todas las elecciones
 export async function getElecciones(): Promise<Eleccion[]> {
-  const res = await fetch(`${API_URL}/elecciones`);
-  if (!res.ok) throw new Error("Error al obtener elecciones");
-  return res.json();
+  try {
+    return await apiClient.get<Eleccion[]>('/elecciones');
+  } catch (error) {
+    throw new Error("Error al obtener elecciones");
+  }
 }
 
 // Obtener resumen de elecciones
 export async function getResumenElecciones(): Promise<any[]> {
-  const res = await fetch(`${API_URL}/elecciones/resumen/lista`);
-  if (!res.ok) throw new Error("Error al obtener resumen de elecciones");
-  return res.json();
+  try {
+    return await apiClient.get<any[]>('/elecciones/resumen/lista');
+  } catch (error) {
+    throw new Error("Error al obtener resumen de elecciones");
+  }
 }
 
 // Obtener resultados públicos para proyector
 export async function getResultadosPublicos(id: number): Promise<any> {
-  const res = await fetch(`${API_URL}/elecciones/${id}/resultados-publicos`);
-  if (!res.ok) throw new Error("Error al obtener resultados públicos");
-  return res.json();
+  try {
+    return await apiClient.get<any>(`/elecciones/${id}/resultados-publicos`);
+  } catch (error) {
+    throw new Error("Error al obtener resultados públicos");
+  }
 }
 
 // Obtener resumen final con ganadores
 export async function getResumenFinal(id: number): Promise<any[]> {
-  const res = await fetch(`${API_URL}/elecciones/${id}/resumen-final`);
-  if (!res.ok) throw new Error("Error al obtener resumen final");
-  return res.json();
+  try {
+    return await apiClient.get<any[]>(`/elecciones/${id}/resumen-final`);
+  } catch (error) {
+    throw new Error("Error al obtener resumen final");
+  }
 }
 
 // Generar reporte
 export async function generarReporte(id: number, formato: string = 'pdf'): Promise<any> {
-  const res = await fetch(`${API_URL}/elecciones/${id}/generar-reporte`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ formato, incluir_detalles: true }),
-  });
-  if (!res.ok) throw new Error("Error al generar reporte");
-  return res.json();
+  try {
+    const data = { formato, incluir_detalles: true };
+    return await apiClient.post<any>(`/elecciones/${id}/generar-reporte`, data);
+  } catch (error) {
+    throw new Error("Error al generar reporte");
+  }
 }
 
 // Obtener una por ID
 export async function getEleccion(id: number): Promise<Eleccion> {
-  const res = await fetch(`${API_URL}/elecciones/${id}`);
-  if (!res.ok) throw new Error("Error al obtener elección");
-  return res.json();
+  try {
+    return await apiClient.get<Eleccion>(`/elecciones/${id}`);
+  } catch (error) {
+    throw new Error("Error al obtener elección");
+  }
 }
 
 // Crear nueva elección
@@ -65,13 +75,11 @@ export async function crearEleccion(data: {
   anio: number;
   descripcion?: string;
 }): Promise<Eleccion> {
-  const res = await fetch(`${API_URL}/elecciones`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Error al crear elección");
-  return res.json();
+  try {
+    return await apiClient.post<Eleccion>('/elecciones', data);
+  } catch (error) {
+    throw new Error("Error al crear elección");
+  }
 }
 
 // Actualizar elección
@@ -82,36 +90,33 @@ export async function actualizarEleccion(
     descripcion?: string;
     fecha?: string;
     anio?: number;
-    estado?: "DRAFT" | "EN_CURSO" | "FINALIZADA";
+    estado?: EstadoEleccion;
   }
 ): Promise<Eleccion> {
-  const res = await fetch(`${API_URL}/elecciones/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Error al actualizar elección");
-  return res.json();
+  try {
+    return await apiClient.put<Eleccion>(`/elecciones/${id}`, data);
+  } catch (error) {
+    throw new Error("Error al actualizar elección");
+  }
 }
 
 // Eliminar elección
 export async function eliminarEleccion(id: number): Promise<void> {
-  const res = await fetch(`${API_URL}/elecciones/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Error al eliminar elección");
+  try {
+    await apiClient.delete<void>(`/elecciones/${id}`);
+  } catch (error) {
+    throw new Error("Error al eliminar elección");
+  }
 }
 
 // Cambiar estado de elección
 export async function cambiarEstadoEleccion(
   id: number,
-  estado: "DRAFT" | "EN_CURSO" | "FINALIZADA"
+  estado: EstadoEleccion
 ): Promise<Eleccion> {
-  const res = await fetch(`${API_URL}/elecciones/${id}/estado`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ estado }),
-  });
-  if (!res.ok) throw new Error("Error al cambiar estado de elección");
-  return res.json();
+  try {
+    return await apiClient.patch<Eleccion>(`/elecciones/${id}/estado`, { estado });
+  } catch (error) {
+    throw new Error("Error al cambiar estado de elección");
+  }
 }

@@ -1,7 +1,11 @@
 import { Router } from "express";
 import prisma from "../prisma";
+import { authenticateToken, requireOrganizador } from "../middleware/auth";
 
 const router = Router();
+
+// Aplicar autenticación a todas las rutas
+router.use(authenticateToken);
 
 /**
  * GET /api/elecciones/resumen
@@ -103,7 +107,7 @@ router.get("/:id", async (req, res) => {
  * POST /api/elecciones
  * Crear nueva elección
  */
-router.post("/", async (req, res) => {
+router.post("/", requireOrganizador, async (req, res) => {
   try {
     const { nombre, descripcion, fecha, anio } = req.body;
 
@@ -133,7 +137,7 @@ router.post("/", async (req, res) => {
  * PUT /api/elecciones/:id
  * Actualizar elección
  */
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireOrganizador, async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, descripcion } = req.body;
@@ -157,7 +161,7 @@ router.put("/:id", async (req, res) => {
  * DELETE /api/elecciones/:id
  * Eliminar elección
  */
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireOrganizador, async (req, res) => {
   const { id } = req.params;
   try {
     await prisma.eleccion.delete({
@@ -173,7 +177,7 @@ router.delete("/:id", async (req, res) => {
  * PATCH /api/elecciones/:id/estado
  * Cambiar estado de elección
  */
-router.patch("/:id/estado", async (req, res) => {
+router.patch("/:id/estado", requireOrganizador, async (req, res) => {
   const { id } = req.params;
   const { estado } = req.body;
 

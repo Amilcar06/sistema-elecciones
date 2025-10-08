@@ -1,7 +1,11 @@
 import { Router } from "express";
 import prisma from "../prisma";
+import { authenticateToken, requireOrganizador } from "../middleware/auth";
 
 const router = Router();
+
+// Aplicar autenticación a todas las rutas
+router.use(authenticateToken);
 
 /**
  * GET /api/cargos
@@ -64,7 +68,7 @@ router.get("/:id", async (req, res) => {
  * POST /api/cargos
  * Crear nuevo cargo en una elección
  */
-router.post("/", async (req, res) => {
+router.post("/", requireOrganizador, async (req, res) => {
   try {
     const { id_eleccion, id_catalogo, orden, estado } = req.body;
 
@@ -103,7 +107,7 @@ router.post("/", async (req, res) => {
  * PUT /api/cargos/:id
  * Actualizar cargo
  */
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireOrganizador, async (req, res) => {
   const { id } = req.params;
   const { estado, orden } = req.body;
 
@@ -136,7 +140,7 @@ router.put("/:id", async (req, res) => {
  * DELETE /api/cargos/:id
  * Eliminar cargo
  */
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireOrganizador, async (req, res) => {
   const { id } = req.params;
   try {
     await prisma.cargo.delete({
