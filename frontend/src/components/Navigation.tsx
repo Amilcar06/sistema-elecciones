@@ -19,7 +19,7 @@ import { GlobalSearch } from './GlobalSearch';
 export const Navigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { usuario, logout, isAdmin, isOrganizador } = useAuth();
+  const { usuario, logout, isAdmin, isUsuario } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -79,6 +79,8 @@ export const Navigation: React.FC = () => {
   const getRolBadgeVariant = (rol: string) => {
     switch (rol) {
       case 'ADMIN': return 'destructive';
+      case 'USUARIO': return 'default';
+      // Mantener compatibilidad con roles antiguos
       case 'ORGANIZADOR': return 'default';
       case 'OBSERVADOR': return 'secondary';
       default: return 'outline';
@@ -119,14 +121,9 @@ export const Navigation: React.FC = () => {
             size="sm"
             onClick={() => setIsSearchOpen(true)}
             className="flex items-center space-x-2"
-            aria-label="Buscar en el sistema (Ctrl+K)"
-            title="Buscar en el sistema (Ctrl+K)"
           >
             <Search className="h-4 w-4" aria-hidden="true" />
             <span className="hidden sm:inline">Buscar</span>
-            <kbd className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-              <span className="text-xs">⌘</span>K
-            </kbd>
           </Button>
 
           <Button
@@ -135,55 +132,10 @@ export const Navigation: React.FC = () => {
             onClick={() => navigate('/')}
             className="flex items-center space-x-2"
             aria-current={isActive('/') ? 'page' : undefined}
-            aria-label="Ir a la página de inicio (Alt+H)"
-            title="Ir a la página de inicio (Alt+H)"
           >
             <Home className="h-4 w-4" aria-hidden="true" />
             <span>Inicio</span>
-            <kbd className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-              Alt+H
-            </kbd>
           </Button>
-
-          {isOrganizador && (
-            <>
-              <Button
-                variant={isActive('/positions') ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => navigate('/positions')}
-                className="flex items-center space-x-2"
-                aria-current={isActive('/positions') ? 'page' : undefined}
-                aria-label="Gestionar cargos electorales"
-              >
-                <Settings className="h-4 w-4" aria-hidden="true" />
-                <span>Cargos</span>
-              </Button>
-
-              <Button
-                variant={isActive('/candidates') ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => navigate('/candidates')}
-                className="flex items-center space-x-2"
-                aria-current={isActive('/candidates') ? 'page' : undefined}
-                aria-label="Gestionar candidatos"
-              >
-                <Users className="h-4 w-4" aria-hidden="true" />
-                <span>Candidatos</span>
-              </Button>
-
-              <Button
-                variant={isActive('/results') ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => navigate('/results')}
-                className="flex items-center space-x-2"
-                aria-current={isActive('/results') ? 'page' : undefined}
-                aria-label="Ver resultados de elecciones"
-              >
-                <Vote className="h-4 w-4" aria-hidden="true" />
-                <span>Resultados</span>
-              </Button>
-            </>
-          )}
 
           <Button
             variant={isActive('/history') ? 'default' : 'ghost'}
@@ -204,14 +156,9 @@ export const Navigation: React.FC = () => {
               onClick={() => navigate('/dashboard')}
               className="flex items-center space-x-2"
               aria-current={isActive('/dashboard') ? 'page' : undefined}
-              aria-label="Acceder al panel de administración (Alt+D)"
-              title="Acceder al panel de administración (Alt+D)"
             >
               <Shield className="h-4 w-4" aria-hidden="true" />
               <span>Dashboard</span>
-              <kbd className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                Alt+D
-              </kbd>
             </Button>
           )}
         </div>

@@ -16,6 +16,8 @@ interface AuthContextType {
   checkAuth: () => Promise<boolean>;
   hasRole: (roles: string[]) => boolean;
   isAdmin: boolean;
+  isUsuario: boolean;
+  // Mantener compatibilidad con código existente
   isOrganizador: boolean;
   isObservador: boolean;
 }
@@ -34,8 +36,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const isAuthenticated = !!usuario && !!token;
   const isAdmin = usuario?.rol === 'ADMIN';
-  const isOrganizador = ['ADMIN', 'ORGANIZADOR'].includes(usuario?.rol || '');
-  const isObservador = ['ADMIN', 'ORGANIZADOR', 'OBSERVADOR'].includes(usuario?.rol || '');
+  const isUsuario = usuario?.rol === 'USUARIO';
+  
+  // Mantener compatibilidad con código existente
+  const isOrganizador = isAdmin; // ADMIN puede hacer todo lo que hacía ORGANIZADOR
+  const isObservador = isAdmin || isUsuario; // Ambos roles pueden observar
 
   const hasRole = (roles: string[]) => {
     return usuario ? roles.includes(usuario.rol) : false;
@@ -145,6 +150,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuth,
     hasRole,
     isAdmin,
+    isUsuario,
     isOrganizador,
     isObservador,
   };

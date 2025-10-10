@@ -23,7 +23,14 @@ import {
   Calendar as CalendarIcon,
   Search,
   RotateCcw,
-  ChevronDown
+  ChevronDown,
+  SlidersHorizontal,
+  Clock,
+  TrendingUp,
+  Users,
+  Calendar,
+  Settings,
+  CheckSquare
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -43,6 +50,8 @@ export interface DateFilters {
 export interface EleccionFilters extends BaseFilters, DateFilters {
   estado?: string;
   usuario?: string;
+  estados?: string[]; // Filtros múltiples
+  usuarios?: string[]; // Filtros múltiples
 }
 
 export interface CargoFilters extends BaseFilters {
@@ -84,11 +93,54 @@ export function AdvancedFilters({
 }: AdvancedFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [localFilters, setLocalFilters] = useState(filters);
+  const [savedFilters, setSavedFilters] = useState<Array<{name: string, filters: any}>>([]);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [saveFilterName, setSaveFilterName] = useState('');
 
   // Sincronizar filtros locales con los props
   useEffect(() => {
     setLocalFilters(filters);
   }, [filters]);
+
+  // Cargar filtros guardados del localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem(`advancedFilters_${type}`);
+    if (saved) {
+      try {
+        setSavedFilters(JSON.parse(saved));
+      } catch (error) {
+        console.error('Error cargando filtros guardados:', error);
+      }
+    }
+  }, [type]);
+
+  // Guardar filtros
+  const saveFilters = () => {
+    if (!saveFilterName.trim()) return;
+    
+    const newSavedFilters = [
+      ...savedFilters.filter(f => f.name !== saveFilterName),
+      { name: saveFilterName, filters: { ...localFilters } }
+    ];
+    
+    setSavedFilters(newSavedFilters);
+    localStorage.setItem(`advancedFilters_${type}`, JSON.stringify(newSavedFilters));
+    setSaveFilterName('');
+    setShowSaveDialog(false);
+  };
+
+  // Aplicar filtros guardados
+  const applySavedFilters = (savedFilter: any) => {
+    setLocalFilters(savedFilter.filters);
+    onFiltersChange(savedFilter.filters);
+  };
+
+  // Eliminar filtros guardados
+  const deleteSavedFilters = (filterName: string) => {
+    const newSavedFilters = savedFilters.filter(f => f.name !== filterName);
+    setSavedFilters(newSavedFilters);
+    localStorage.setItem(`advancedFilters_${type}`, JSON.stringify(newSavedFilters));
+  };
 
   const handleFilterChange = (key: string, value: any) => {
     const newFilters = { ...localFilters, [key]: value };
@@ -114,6 +166,34 @@ export function AdvancedFilters({
       localFilters[key] !== '' && 
       localFilters[key] !== null
     ).length;
+  };
+
+  // Filtros rápidos predefinidos
+  const getQuickFilters = () => {
+    switch (type) {
+      case 'elecciones':
+        return [
+          { name: 'Hoy', filters: { fechaDesde: new Date().toISOString().split('T')[0], fechaHasta: new Date().toISOString().split('T')[0] } },
+          { name: 'Esta semana', filters: { fechaDesde: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] } },
+          { name: 'Este mes', filters: { fechaDesde: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] } },
+          { name: 'Activas', filters: { estado: 'EN_CURSO' } },
+          { name: 'Completadas', filters: { estado: 'COMPLETADA' } },
+        ];
+      case 'usuarios':
+        return [
+          { name: 'Activos', filters: { estado: 'ACTIVO' } },
+          { name: 'Administradores', filters: { rol: 'ADMIN' } },
+          { name: 'Organizadores', filters: { rol: 'ORGANIZADOR' } },
+          { name: 'Observadores', filters: { rol: 'OBSERVADOR' } },
+        ];
+      default:
+        return [];
+    }
+  };
+
+  const applyQuickFilter = (quickFilter: any) => {
+    setLocalFilters(quickFilter.filters);
+    onFiltersChange(quickFilter.filters);
   };
 
   const renderDateFilter = (label: string, key: 'fechaDesde' | 'fechaHasta') => {
@@ -461,7 +541,105 @@ export function AdvancedFilters({
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              {renderFilters()}
+              {/* Filtros rápidos */}
+              {getQuickFilters().length > 0 && (
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-muted-foreground">Filtros rápidos</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {getQuickFilters().map((quickFilter, index) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => applyQuickFilter(quickFilter)}
+                        className="text-xs h-7"
+                      >
+                        {quickFilter.name}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Filtros guardados */}
+              {savedFilters.length > 0 && (
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Settings className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium text-muted-foreground">Filtros guardados</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowSaveDialog(true)}
+                      className="h-6 px-2 text-xs"
+                    >
+                      <CheckSquare className="h-3 w-3 mr-1" />
+                      Guardar
+                    </Button>
+                  </div>
+                  <div className="space-y-1">
+                    {savedFilters.map((savedFilter, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-muted/50 rounded">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => applySavedFilters(savedFilter)}
+                          className="h-6 px-2 text-xs justify-start"
+                        >
+                          {savedFilter.name}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteSavedFilters(savedFilter.name)}
+                          className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Filtros principales */}
+              <div className="border-t pt-4">
+                {renderFilters()}
+              </div>
+
+              {/* Diálogo para guardar filtros */}
+              {showSaveDialog && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                  <Card className="w-96">
+                    <CardHeader>
+                      <CardTitle>Guardar filtros</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Nombre del filtro</Label>
+                        <Input
+                          value={saveFilterName}
+                          onChange={(e) => setSaveFilterName(e.target.value)}
+                          placeholder="Ej: Elecciones activas"
+                        />
+                      </div>
+                      <div className="flex gap-2 justify-end">
+                        <Button variant="outline" onClick={() => setShowSaveDialog(false)}>
+                          Cancelar
+                        </Button>
+                        <Button onClick={saveFilters} disabled={!saveFilterName.trim()}>
+                          Guardar
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
             </CardContent>
           </Card>
         </PopoverContent>

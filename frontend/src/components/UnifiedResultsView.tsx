@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Button } from './ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
+import { Input } from './ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { 
   ArrowLeft, 
   RefreshCw, 
@@ -14,13 +16,19 @@ import {
   ArrowRight,
   Copy,
   Settings,
-  BarChart3
+  BarChart3,
+  Search,
+  Filter,
+  SortAsc,
+  SortDesc,
+  X
 } from 'lucide-react';
 import { Eleccion } from '../services/eleccionService';
 import { Cargo } from '../services/cargoService';
 import { getResultadosPublicos } from '../services/eleccionService';
 import { useToast } from '../hooks/useToast';
 import { ToastContainer } from './ui/Toast';
+import { AdvancedFilters } from './AdvancedFilters';
 
 // Interfaces unificadas
 interface CandidatoResultado {
@@ -88,6 +96,13 @@ export function UnifiedResultsView({
   const [showCopySuccess, setShowCopySuccess] = useState(false);
   const intervalRef = useRef<number | null>(null);
   const { toasts, addToast, removeToast, success } = useToast();
+
+  // Estados para filtros y búsqueda
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'preparando' | 'en_progreso' | 'completado' | 'sin_candidatos'>('all');
+  const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState<'nombre' | 'estado' | 'votos'>('nombre');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // Determinar ID de elección activa
   const activeElectionId = mode === 'admin' ? election?.id_eleccion : electionId;
@@ -186,6 +201,49 @@ export function UnifiedResultsView({
       setLoading(false);
     }
   };
+
+  // Lógica de filtrado y búsqueda
+  const filteredAndSortedResults = useMemo(() => {
+    let filtered = resultadosPublicos;
+
+    // Filtrar por término de búsqueda
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(cargo => 
+        cargo.nombre.toLowerCase().includes(searchLower) ||
+        cargo.candidatos.some(candidato => 
+          candidato.nombre_completo.toLowerCase().includes(searchLower)
+        )
+      );
+    }
+
+    // Filtrar por estado
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(cargo => cargo.estado === statusFilter);
+    }
+
+    // Ordenar
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'nombre':
+          comparison = a.nombre.localeCompare(b.nombre);
+          break;
+        case 'estado':
+          const statusOrder = { 'completado': 0, 'en_progreso': 1, 'preparando': 2, 'sin_candidatos': 3 };
+          comparison = statusOrder[a.estado] - statusOrder[b.estado];
+          break;
+        case 'votos':
+          comparison = a.total_votos - b.total_votos;
+          break;
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    return filtered;
+  }, [resultadosPublicos, searchTerm, statusFilter, sortBy, sortOrder]);
 
   // Efectos
   useEffect(() => {
@@ -296,9 +354,116 @@ export function UnifiedResultsView({
             </div>
           </div>
 
+          {/* Controles de filtro y búsqueda */}
+          <div className="mb-6 space-y-4">
+            <div className="flex items-center gap-4 flex-wrap">
+              {/* Búsqueda */}
+              <div className="relative flex-1 min-w-[300px]">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar cargos o candidatos..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+                {searchTerm && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+
+              {/* Filtros */}
+              <Button
+                variant={showFilters ? "default" : "outline"}
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-2"
+              >
+                <Filter className="h-4 w-4" />
+                Filtros
+                {(statusFilter !== 'all' || sortBy !== 'nombre' || sortOrder !== 'asc') && (
+                  <Badge variant="secondary" className="ml-1">
+                    {(statusFilter !== 'all' ? 1 : 0) + (sortBy !== 'nombre' || sortOrder !== 'asc' ? 1 : 0)}
+                  </Badge>
+                )}
+              </Button>
+            </div>
+
+            {/* Panel de filtros expandible */}
+            {showFilters && (
+              <Card>
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Filtro por estado */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Estado</label>
+                      <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Todos los estados" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos</SelectItem>
+                          <SelectItem value="completado">Completado</SelectItem>
+                          <SelectItem value="en_progreso">En Progreso</SelectItem>
+                          <SelectItem value="preparando">Preparando</SelectItem>
+                          <SelectItem value="sin_candidatos">Sin Candidatos</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Ordenar por */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Ordenar por</label>
+                      <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="nombre">Nombre</SelectItem>
+                          <SelectItem value="estado">Estado</SelectItem>
+                          <SelectItem value="votos">Total de Votos</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Orden */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Orden</label>
+                      <div className="flex gap-2">
+                        <Button
+                          variant={sortOrder === 'asc' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setSortOrder('asc')}
+                          className="flex items-center gap-1"
+                        >
+                          <SortAsc className="h-3 w-3" />
+                          Asc
+                        </Button>
+                        <Button
+                          variant={sortOrder === 'desc' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setSortOrder('desc')}
+                          className="flex items-center gap-1"
+                        >
+                          <SortDesc className="h-3 w-3" />
+                          Desc
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
           {/* Contenido de resultados */}
           <ResultsContent 
-            resultados={resultadosPublicos}
+            resultados={filteredAndSortedResults}
             loading={loading}
             isOnline={isOnline}
             lastUpdate={lastUpdate}
@@ -340,7 +505,7 @@ export function UnifiedResultsView({
 
           {/* Contenido de resultados */}
           <ResultsContent 
-            resultados={resultadosPublicos}
+            resultados={filteredAndSortedResults}
             loading={loading}
             isOnline={isOnline}
             lastUpdate={lastUpdate}

@@ -7,6 +7,7 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRoles?: string[];
   adminOnly?: boolean;
+  // Mantener compatibilidad con código existente
   organizadorOnly?: boolean;
 }
 
@@ -16,7 +17,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   adminOnly = false,
   organizadorOnly = false 
 }) => {
-  const { isAuthenticated, isLoading, hasRole, isAdmin, isOrganizador } = useAuth();
+  const { isAuthenticated, isLoading, hasRole, isAdmin, isUsuario, isOrganizador } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -37,7 +38,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/unauthorized" replace />;
   }
 
-  if (organizadorOnly && !isOrganizador) {
+  // Mantener compatibilidad: organizadorOnly ahora es equivalente a adminOnly
+  if (organizadorOnly && !isAdmin) {
     return <Navigate to="/unauthorized" replace />;
   }
 

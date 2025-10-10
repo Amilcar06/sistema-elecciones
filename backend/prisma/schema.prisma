@@ -13,7 +13,7 @@ model Usuario {
   nombre             String        @db.VarChar(100)
   apellido           String        @db.VarChar(100)
   password_hash      String        @db.VarChar(255)
-  rol                RolUsuario    @default(ORGANIZADOR)
+  rol                RolUsuario    @default(USUARIO)
   estado             EstadoUsuario @default(ACTIVO)
   ultimo_acceso      DateTime?
   created_at         DateTime      @default(now())
@@ -190,6 +190,8 @@ enum ModoPublicacion {
 
 enum RolUsuario {
   ADMIN
+  USUARIO
+  // Mantener roles antiguos para compatibilidad
   ORGANIZADOR
   OBSERVADOR
 }

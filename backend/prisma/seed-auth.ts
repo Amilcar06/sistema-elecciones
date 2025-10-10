@@ -24,41 +24,41 @@ async function main() {
 
   console.log('Usuario administrador creado:', admin.email);
 
-  // Crear usuario organizador de ejemplo
-  const organizadorPassword = await bcrypt.hash('organizador123', 12);
+  // Crear usuario estándar de ejemplo
+  const usuarioPassword = await bcrypt.hash('usuario123', 12);
   
-  const organizador = await prisma.usuario.upsert({
-    where: { email: 'organizador@sistema-electoral.com' },
+  const usuario = await prisma.usuario.upsert({
+    where: { email: 'usuario@sistema-electoral.com' },
     update: {},
     create: {
-      email: 'organizador@sistema-electoral.com',
+      email: 'usuario@sistema-electoral.com',
       nombre: 'Juan',
-      apellido: 'Organizador',
-      password_hash: organizadorPassword,
-      rol: 'ORGANIZADOR',
+      apellido: 'Usuario',
+      password_hash: usuarioPassword,
+      rol: 'USUARIO',
       estado: 'ACTIVO'
     }
   });
 
-  console.log('Usuario organizador creado:', organizador.email);
+  console.log('Usuario estándar creado:', usuario.email);
 
-  // Crear usuario observador de ejemplo
-  const observadorPassword = await bcrypt.hash('observador123', 12);
+  // Crear otro usuario de ejemplo
+  const usuario2Password = await bcrypt.hash('usuario123', 12);
   
-  const observador = await prisma.usuario.upsert({
-    where: { email: 'observador@sistema-electoral.com' },
+  const usuario2 = await prisma.usuario.upsert({
+    where: { email: 'maria@sistema-electoral.com' },
     update: {},
     create: {
-      email: 'observador@sistema-electoral.com',
+      email: 'maria@sistema-electoral.com',
       nombre: 'María',
-      apellido: 'Observadora',
-      password_hash: observadorPassword,
-      rol: 'OBSERVADOR',
+      apellido: 'García',
+      password_hash: usuario2Password,
+      rol: 'USUARIO',
       estado: 'ACTIVO'
     }
   });
 
-  console.log('Usuario observador creado:', observador.email);
+  console.log('Segundo usuario creado:', usuario2.email);
 
   // Crear algunos cargos del catálogo
   const cargosCatalogo = [
@@ -102,8 +102,8 @@ async function main() {
   console.log('Seed de autenticación completado exitosamente!');
   console.log('Credenciales de prueba:');
   console.log('Admin: admin@sistema-electoral.com / admin123');
-  console.log('Organizador: organizador@sistema-electoral.com / organizador123');
-  console.log('Observador: observador@sistema-electoral.com / observador123');
+  console.log('Usuario 1: usuario@sistema-electoral.com / usuario123');
+  console.log('Usuario 2: maria@sistema-electoral.com / usuario123');
 }
 
 main()
