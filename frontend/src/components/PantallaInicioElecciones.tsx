@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from './ui/label';
 import { ToastContainer } from './ui/Toast';
 import { AnimatedCard, StaggeredAnimation } from './ui/AnimatedCard';
-import { Vote, History, Plus } from 'lucide-react';
+import { Vote, History, Plus, Settings, BarChart3 } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 
 interface HomeScreenProps {
@@ -58,10 +58,10 @@ const handleCreateElection = async () => {
               <Vote className="h-10 w-10 text-primary" />
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4 leading-tight">
-              ELECCIONES MESA DIRECTIVA 2025
+              SISTEMA DE ELECCIONES
             </h1>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Sistema integral de gestión para elecciones transparentes y eficientes
+              Plataforma integral para gestionar elecciones de manera transparente y eficiente
             </p>
           </div>
 
@@ -79,11 +79,11 @@ const handleCreateElection = async () => {
                         <Plus className="h-8 w-8 text-primary" />
                       </div>
                     </div>
-                    <CardTitle className="text-2xl font-bold text-center mb-2">Nueva Elección</CardTitle>
+                    <CardTitle className="text-2xl font-bold text-center mb-2">Crear Elección</CardTitle>
                   </CardHeader>
                   <CardContent className="text-center">
                     <p className="text-muted-foreground text-base leading-relaxed">
-                      Crear y configurar una nueva elección con todos los parámetros necesarios
+                      Configurar una nueva elección con cargos, candidatos y parámetros necesarios
                     </p>
                   </CardContent>
                 </Card>
@@ -93,9 +93,9 @@ const handleCreateElection = async () => {
                 <div className="mx-auto mb-4 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
                   <Plus className="h-6 w-6 text-primary" />
                 </div>
-                <DialogTitle className="text-2xl font-bold">Crear Nueva Elección</DialogTitle>
+                <DialogTitle className="text-2xl font-bold">Nueva Elección</DialogTitle>
                 <p className="text-muted-foreground">
-                  Configura los parámetros básicos para tu nueva elección
+                  Configura los parámetros básicos para tu elección
                 </p>
               </DialogHeader>
               <div className="space-y-6 py-4">
@@ -161,11 +161,11 @@ const handleCreateElection = async () => {
                     <History className="h-8 w-8 text-primary" />
                   </div>
                 </div>
-                <CardTitle className="text-2xl font-bold text-center mb-2">Ver Historial</CardTitle>
+                <CardTitle className="text-2xl font-bold text-center mb-2">Historial</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
                 <p className="text-muted-foreground text-base leading-relaxed">
-                  Consultar resultados y estadísticas de elecciones anteriores
+                  Consultar resultados y estadísticas de elecciones realizadas
                 </p>
               </CardContent>
             </Card>
@@ -175,10 +175,10 @@ const handleCreateElection = async () => {
           <AnimatedCard delay={400}>
             <div className="text-center mb-12">
               <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
-                Características Principales
+                Funcionalidades del Sistema
               </h2>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                Herramientas avanzadas para una gestión electoral eficiente y transparente
+                Herramientas especializadas para una gestión electoral eficiente y transparente
               </p>
             </div>
           </AnimatedCard>
@@ -189,29 +189,29 @@ const handleCreateElection = async () => {
           >
             <div className="text-center group">
               <div className="bg-gradient-to-br from-primary/10 to-primary/5 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                <Vote className="h-8 w-8 text-primary" />
+                <Settings className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-foreground">Gestión Completa</h3>
+              <h3 className="text-xl font-bold mb-3 text-foreground">Configuración Electoral</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Administra cargos, candidatos y resultados en un solo lugar con herramientas intuitivas
+                Administra cargos, candidatos y parámetros de elección con herramientas intuitivas
               </p>
             </div>
             <div className="text-center group">
               <div className="bg-gradient-to-br from-primary/10 to-primary/5 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                <History className="h-8 w-8 text-primary" />
+                <BarChart3 className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-foreground">Resultados en Tiempo Real</h3>
+              <h3 className="text-xl font-bold mb-3 text-foreground">Resultados en Vivo</h3>
               <p className="text-muted-foreground leading-relaxed">
                 Visualiza y proyecta resultados conforme se van ingresando con actualizaciones automáticas
               </p>
             </div>
             <div className="text-center group">
               <div className="bg-gradient-to-br from-primary/10 to-primary/5 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                <Plus className="h-8 w-8 text-primary" />
+                <History className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-foreground">Historial Completo</h3>
+              <h3 className="text-xl font-bold mb-3 text-foreground">Registro Histórico</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Mantén un registro detallado de todas las elecciones realizadas con análisis estadísticos
+                Consulta el historial completo de elecciones con análisis estadísticos detallados
               </p>
             </div>
           </StaggeredAnimation>

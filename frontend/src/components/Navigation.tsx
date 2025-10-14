@@ -4,9 +4,6 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { 
   Home, 
-  Users, 
-  Vote, 
-  Settings, 
   History, 
   LogOut, 
   User,

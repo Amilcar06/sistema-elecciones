@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from './ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
-import { ArrowLeft, RefreshCw, Wifi, WifiOff, Trophy, Users, Home, Eye, ArrowRight } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Wifi, WifiOff, Trophy, Users, Home, ArrowRight } from 'lucide-react';
 import { Eleccion } from '../services/eleccionService';
 import { Cargo } from '../services/cargoService';
 import { getResultadosPublicos } from '../services/eleccionService';

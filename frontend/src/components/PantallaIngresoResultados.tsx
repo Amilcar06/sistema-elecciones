@@ -3,7 +3,7 @@ import { Button } from './ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { ArrowLeft, Save, Edit, Monitor, RotateCcw, RefreshCw, Link, Copy } from 'lucide-react';
+import { ArrowLeft, Save, Monitor, RotateCcw } from 'lucide-react';
 import { Cargo } from '../services/cargoService';
 import { 
   listarCandidatos,
@@ -419,7 +419,7 @@ export function PantallaIngresoResultados({ position, election, onUpdatePosition
       </div>
       
       {/* Toast Container */}
-      <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
     </div>
   );
 }

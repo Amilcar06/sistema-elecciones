@@ -9,13 +9,8 @@ import {
   Calendar, 
   Users, 
   Settings, 
-  BarChart3,
   Clock,
-  CheckCircle,
-  AlertCircle,
   History,
-  TrendingUp,
-  Filter,
   SortAsc
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';

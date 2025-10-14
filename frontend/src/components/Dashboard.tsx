@@ -644,7 +644,7 @@ export const Dashboard: React.FC = () => {
       </Dialog>
       
       {/* Toast Container */}
-      <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
     </div>
   );
 };

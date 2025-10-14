@@ -24,11 +24,7 @@ import {
   Search,
   RotateCcw,
   ChevronDown,
-  SlidersHorizontal,
   Clock,
-  TrendingUp,
-  Users,
-  Calendar,
   Settings,
   CheckSquare
 } from 'lucide-react';

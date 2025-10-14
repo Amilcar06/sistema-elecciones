@@ -286,7 +286,7 @@ export function PantallaRegistroCandidatos({ position, onUpdatePosition, onStart
                         size="sm"
                         onClick={() => openEditDialog(candidate)}
                         disabled={loading}
-                        aria-label={`Editar candidato ${candidate.nombre}`}
+                        aria-label={`Editar candidato ${candidate.nombre_completo}`}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -295,7 +295,7 @@ export function PantallaRegistroCandidatos({ position, onUpdatePosition, onStart
                         size="sm"
                         onClick={() => deleteCandidate(candidate.id_candidato)}
                         disabled={loading}
-                        aria-label={`Eliminar candidato ${candidate.nombre}`}
+                        aria-label={`Eliminar candidato ${candidate.nombre_completo}`}
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -330,7 +330,7 @@ export function PantallaRegistroCandidatos({ position, onUpdatePosition, onStart
       </div>
       
       {/* Toast Container */}
-      <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
     </div>
   );
 }
