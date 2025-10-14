@@ -81,8 +81,7 @@ const EditUsuarioForm: React.FC<EditUsuarioFormProps> = ({ usuario, onSave, onCa
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ADMIN">Administrador</SelectItem>
-            <SelectItem value="ORGANIZADOR">Organizador</SelectItem>
-            <SelectItem value="OBSERVADOR">Observador</SelectItem>
+            <SelectItem value="USUARIO">Usuario</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -416,8 +415,7 @@ export const Dashboard: React.FC = () => {
                   <SelectContent>
                     <SelectItem value="ALL">Todos los roles</SelectItem>
                     <SelectItem value="ADMIN">Admin</SelectItem>
-                    <SelectItem value="ORGANIZADOR">Organizador</SelectItem>
-                    <SelectItem value="OBSERVADOR">Observador</SelectItem>
+                    <SelectItem value="USUARIO">Usuario</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={usuarioEstado} onValueChange={setUsuarioEstado}>

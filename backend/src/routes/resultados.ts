@@ -1,6 +1,6 @@
 import { Router } from "express";
 import prisma from "../prisma";
-import { authenticateToken, requireOrganizador } from "../middleware/auth";
+import { authenticateToken, requireOrganizador, requireUsuario } from "../middleware/auth";
 
 const router = Router();
 
@@ -30,7 +30,7 @@ router.get("/rondas/:idRonda", async (req, res) => {
  * Registrar votos de varios candidatos en la ronda
  * body: [ { id_candidato, votos } ]
  */
-router.post("/rondas/:idRonda", requireOrganizador, async (req, res) => {
+router.post("/rondas/:idRonda", requireUsuario, async (req, res) => {
   try {
     const { idRonda } = req.params;
     const resultados: { id_candidato: number; votos: number }[] = req.body;
@@ -57,7 +57,7 @@ router.post("/rondas/:idRonda", requireOrganizador, async (req, res) => {
  * PUT /api/resultados/:id
  * Actualizar votos de un resultado
  */
-router.put("/:id", requireOrganizador, async (req, res) => {
+router.put("/:id", requireUsuario, async (req, res) => {
   try {
     const { id } = req.params;
     const { votos } = req.body;
@@ -77,7 +77,7 @@ router.put("/:id", requireOrganizador, async (req, res) => {
  * DELETE /api/resultados/:id
  * Eliminar resultado
  */
-router.delete("/:id", requireOrganizador, async (req, res) => {
+router.delete("/:id", requireUsuario, async (req, res) => {
   try {
     const { id } = req.params;
 

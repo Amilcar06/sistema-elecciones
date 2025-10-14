@@ -49,18 +49,48 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
         id_usuario: usuario.id_usuario,
         expires_at: {
           gt: new Date()
+        },
+        absolute_expiry: {
+          gt: new Date()
         }
       }
     });
 
     if (!sesion) {
-      return res.status(401).json({ error: 'Sesión expirada o inválida' });
+      return res.status(401).json({ 
+        error: 'Sesión expirada o inválida',
+        code: 'SESSION_EXPIRED',
+        message: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.'
+      });
     }
 
-    // Actualizar último acceso
+    const now = new Date();
+    
+    // Implementar sliding window: extender la sesión por 1 hora desde el último acceso
+    // pero no más allá del límite absoluto de 7 días
+    const lastActivity = sesion.last_activity;
+    const hoursSinceLastActivity = (now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60);
+    
+    // Si han pasado más de 30 minutos desde la última actividad, extender la sesión
+    if (hoursSinceLastActivity >= 0.5) {
+      const newExpiry = new Date(now.getTime() + (60 * 60 * 1000)); // 1 hora desde ahora
+      
+      // No extender más allá del límite absoluto
+      const finalExpiry = newExpiry > sesion.absolute_expiry ? sesion.absolute_expiry : newExpiry;
+      
+      await prisma.sesion.update({
+        where: { id_sesion: sesion.id_sesion },
+        data: {
+          expires_at: finalExpiry,
+          last_activity: now
+        }
+      });
+    }
+
+    // Actualizar último acceso del usuario
     await prisma.usuario.update({
       where: { id_usuario: usuario.id_usuario },
-      data: { ultimo_acceso: new Date() }
+      data: { ultimo_acceso: now }
     });
 
     req.usuario = {
@@ -114,5 +144,8 @@ export const requireRole = (roles: string[]) => {
 };
 
 export const requireAdmin = requireRole(['ADMIN']);
-export const requireOrganizador = requireRole(['ADMIN', 'ORGANIZADOR']);
-export const requireObservador = requireRole(['ADMIN', 'ORGANIZADOR', 'OBSERVADOR']);
+export const requireUsuario = requireRole(['ADMIN', 'USUARIO']);
+
+// Mantener compatibilidad con código existente
+export const requireOrganizador = requireRole(['ADMIN']); // ADMIN puede hacer todo lo que hacía ORGANIZADOR
+export const requireObservador = requireRole(['ADMIN', 'USUARIO']); // Ambos roles pueden observar

@@ -112,26 +112,44 @@ router.post('/login',
         return res.status(401).json({ error: 'Credenciales inválidas' });
       }
 
-      // Generar JWT
-      const token = jwt.sign(
+      const now = new Date();
+      
+      // Generar access token (1 hora)
+      const accessToken = jwt.sign(
         { 
           id_usuario: usuario.id_usuario,
           email: usuario.email,
-          rol: usuario.rol 
+          rol: usuario.rol,
+          type: 'access'
         },
         process.env.JWT_SECRET || 'fallback-secret',
-        { expiresIn: '24h' }
+        { expiresIn: '1h' }
       );
 
-      // Crear sesión
-      const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 24);
+      // Generar refresh token (7 días)
+      const refreshToken = jwt.sign(
+        { 
+          id_usuario: usuario.id_usuario,
+          email: usuario.email,
+          type: 'refresh'
+        },
+        process.env.JWT_SECRET || 'fallback-secret',
+        { expiresIn: '7d' }
+      );
 
+      // Configurar expiraciones
+      const accessTokenExpiry = new Date(now.getTime() + (60 * 60 * 1000)); // 1 hora
+      const absoluteExpiry = new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 días
+
+      // Crear sesión con ambos tokens
       await prisma.sesion.create({
         data: {
           id_usuario: usuario.id_usuario,
-          token,
-          expires_at: expiresAt,
+          token: accessToken,
+          refresh_token: refreshToken,
+          expires_at: accessTokenExpiry,
+          absolute_expiry: absoluteExpiry,
+          last_activity: now,
           ip_address: (req as any).realIP || req.ip,
           user_agent: req.headers['user-agent']
         }
@@ -145,7 +163,8 @@ router.post('/login',
 
       res.json({
         message: 'Login exitoso',
-        token,
+        token: accessToken,
+        refreshToken: refreshToken,
         usuario: {
           id_usuario: usuario.id_usuario,
           email: usuario.email,
@@ -163,6 +182,88 @@ router.post('/login',
 );
 
 /**
+ * POST /api/auth/refresh
+ * Refrescar access token usando refresh token
+ */
+router.post('/refresh', async (req: Request, res: Response) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(401).json({ error: 'Refresh token requerido' });
+    }
+
+    // Verificar refresh token
+    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET || 'fallback-secret') as any;
+    
+    if (decoded.type !== 'refresh') {
+      return res.status(401).json({ error: 'Token inválido' });
+    }
+
+    // Verificar que la sesión existe y el refresh token es válido
+    const sesion = await prisma.sesion.findFirst({
+      where: {
+        refresh_token: refreshToken,
+        id_usuario: decoded.id_usuario,
+        absolute_expiry: {
+          gt: new Date()
+        }
+      },
+      include: {
+        usuario: true
+      }
+    });
+
+    if (!sesion || sesion.usuario.estado !== 'ACTIVO') {
+      return res.status(401).json({ error: 'Refresh token inválido o expirado' });
+    }
+
+    const now = new Date();
+    
+    // Generar nuevo access token
+    const newAccessToken = jwt.sign(
+      { 
+        id_usuario: sesion.usuario.id_usuario,
+        email: sesion.usuario.email,
+        rol: sesion.usuario.rol,
+        type: 'access'
+      },
+      process.env.JWT_SECRET || 'fallback-secret',
+      { expiresIn: '1h' }
+    );
+
+    // Actualizar sesión con nuevo access token
+    const newAccessTokenExpiry = new Date(now.getTime() + (60 * 60 * 1000)); // 1 hora
+    
+    await prisma.sesion.update({
+      where: { id_sesion: sesion.id_sesion },
+      data: {
+        token: newAccessToken,
+        expires_at: newAccessTokenExpiry,
+        last_activity: now
+      }
+    });
+
+    res.json({
+      message: 'Token refrescado exitosamente',
+      token: newAccessToken,
+      refreshToken: refreshToken // Mantener el mismo refresh token
+    });
+
+  } catch (error) {
+    console.error('Error refrescando token:', error);
+    
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ error: 'Refresh token expirado' });
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({ error: 'Refresh token inválido' });
+    }
+    
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+/**
  * POST /api/auth/logout
  * Cerrar sesión
  */
@@ -172,7 +273,7 @@ router.post('/logout', authenticateToken, async (req: Request, res: Response) =>
     const token = authHeader && authHeader.split(' ')[1];
 
     if (token) {
-      // Eliminar sesión
+      // Eliminar sesión completa (incluye ambos tokens)
       await prisma.sesion.deleteMany({
         where: { token }
       });

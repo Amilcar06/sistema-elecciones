@@ -1,6 +1,6 @@
 import { Router } from "express";
 import prisma from "../prisma";
-import { authenticateToken, requireOrganizador } from "../middleware/auth";
+import { authenticateToken, requireOrganizador, requireUsuario } from "../middleware/auth";
 
 const router = Router();
 
@@ -14,6 +14,7 @@ router.use(authenticateToken);
 router.get("/", async (req, res) => {
   try {
     const { id_cargo, activo } = req.query;
+    const usuario = (req as any).usuario; // Usuario del token
     
     const where: any = {};
     if (id_cargo) where.id_cargo = Number(id_cargo);
@@ -25,14 +26,21 @@ router.get("/", async (req, res) => {
         cargo: {
           include: {
             catalogo: true,
-            eleccion: true
+            eleccion: {
+              select: { id_eleccion: true, nombre: true, fecha: true, id_usuario_creador: true }
+            }
           }
         }
       },
       orderBy: { created_at: "asc" }
     });
     
-    res.json(candidatos);
+    // Filtrar por usuario: ADMIN ve todos, USUARIO solo ve los de sus elecciones
+    const candidatosFiltrados = usuario.rol === 'ADMIN' 
+      ? candidatos 
+      : candidatos.filter(candidato => candidato.cargo?.eleccion?.id_usuario_creador === usuario.id_usuario);
+    
+    res.json(candidatosFiltrados);
   } catch (error) {
     res.status(500).json({ error: "Error al listar candidatos", detalle: error });
   }
@@ -76,7 +84,7 @@ router.get("/:id", async (req, res) => {
  * POST /api/candidatos
  * Crear nuevo candidato
  */
-router.post("/", requireOrganizador, async (req, res) => {
+router.post("/", requireUsuario, async (req, res) => {
   try {
     const { id_cargo, nombre, activo } = req.body;
 
@@ -118,7 +126,7 @@ router.post("/", requireOrganizador, async (req, res) => {
  * PUT /api/candidatos/:id
  * Actualizar candidato
  */
-router.put("/:id", requireOrganizador, async (req, res) => {
+router.put("/:id", requireUsuario, async (req, res) => {
   const { id } = req.params;
   const { nombre, activo } = req.body;
 
@@ -152,7 +160,7 @@ router.put("/:id", requireOrganizador, async (req, res) => {
  * DELETE /api/candidatos/:id
  * Eliminar candidato
  */
-router.delete("/:id", requireOrganizador, async (req, res) => {
+router.delete("/:id", requireUsuario, async (req, res) => {
   const { id } = req.params;
   try {
     await prisma.candidato.delete({

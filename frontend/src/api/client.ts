@@ -32,6 +32,55 @@ const getToken = (): string | null => {
   return localStorage.getItem(AUTH_CONFIG.TOKEN_KEY);
 };
 
+// Función para obtener el refresh token del localStorage
+const getRefreshToken = (): string | null => {
+  return localStorage.getItem(AUTH_CONFIG.REFRESH_TOKEN_KEY);
+};
+
+// Función para almacenar tokens
+const setTokens = (accessToken: string, refreshToken: string): void => {
+  localStorage.setItem(AUTH_CONFIG.TOKEN_KEY, accessToken);
+  localStorage.setItem(AUTH_CONFIG.REFRESH_TOKEN_KEY, refreshToken);
+};
+
+// Función para limpiar tokens
+const clearTokens = (): void => {
+  localStorage.removeItem(AUTH_CONFIG.TOKEN_KEY);
+  localStorage.removeItem(AUTH_CONFIG.REFRESH_TOKEN_KEY);
+};
+
+// Función para refrescar token
+const refreshAccessToken = async (): Promise<string | null> => {
+  const refreshToken = getRefreshToken();
+  
+  if (!refreshToken) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: DEFAULT_HEADERS,
+      body: JSON.stringify({ refreshToken })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to refresh token');
+    }
+
+    const data = await response.json();
+    
+    // Actualizar tokens en localStorage
+    setTokens(data.token, data.refreshToken);
+    
+    return data.token;
+  } catch (error) {
+    console.error('Error refreshing token:', error);
+    clearTokens();
+    return null;
+  }
+};
+
 // Función para obtener headers con autenticación
 const getAuthHeaders = (): Record<string, string> => {
   const token = getToken();
@@ -97,7 +146,7 @@ const fetchWithRetry = async (
 };
 
 // Función para procesar la respuesta
-const processResponse = async <T>(response: Response): Promise<T> => {
+const processResponse = async <T>(response: Response, originalRequest?: RequestInit): Promise<T> => {
   if (!response.ok) {
     let errorData: ApiError;
     
@@ -110,12 +159,41 @@ const processResponse = async <T>(response: Response): Promise<T> => {
       };
     }
 
-    // Manejar errores de autenticación
-    if (response.status === 401 || response.status === 403) {
+    // Manejar errores de autenticación (401)
+    if (response.status === 401 && originalRequest) {
+      console.warn('Error de autenticación detectado, intentando refrescar token:', errorData);
+      
+      // Intentar refrescar el token
+      const newAccessToken = await refreshAccessToken();
+      
+      if (newAccessToken) {
+        // Reintentar la petición original con el nuevo token
+        const newHeaders = {
+          ...originalRequest.headers,
+          'Authorization': `Bearer ${newAccessToken}`
+        };
+        
+        const retryResponse = await fetch(response.url, {
+          ...originalRequest,
+          headers: newHeaders
+        });
+        
+        // Procesar la respuesta reintentada
+        return processResponse<T>(retryResponse);
+      } else {
+        // No se pudo refrescar el token, limpiar y notificar
+        clearTokens();
+        localStorage.removeItem(AUTH_CONFIG.USER_KEY);
+        
+        if (onAuthError) {
+          onAuthError();
+        }
+      }
+    } else if (response.status === 401 || response.status === 403) {
       console.warn('Error de autenticación detectado:', errorData);
       
-      // Limpiar token inválido
-      localStorage.removeItem(AUTH_CONFIG.TOKEN_KEY);
+      // Limpiar tokens inválidos
+      clearTokens();
       localStorage.removeItem(AUTH_CONFIG.USER_KEY);
       
       // Notificar al contexto de autenticación
@@ -154,69 +232,74 @@ export class ApiClient {
   // Método GET
   async get<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    
-    const response = await fetchWithRetry(url, {
+    const requestOptions = {
       method: 'GET',
       headers: getAuthHeaders(),
       ...options,
-    });
+    };
+    
+    const response = await fetchWithRetry(url, requestOptions);
 
-    return processResponse<T>(response);
+    return processResponse<T>(response, requestOptions);
   }
 
   // Método POST
   async post<T>(endpoint: string, data?: any, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    
-    const response = await fetchWithRetry(url, {
+    const requestOptions = {
       method: 'POST',
       headers: getAuthHeaders(),
       body: data ? JSON.stringify(data) : undefined,
       ...options,
-    });
+    };
+    
+    const response = await fetchWithRetry(url, requestOptions);
 
-    return processResponse<T>(response);
+    return processResponse<T>(response, requestOptions);
   }
 
   // Método PUT
   async put<T>(endpoint: string, data?: any, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    
-    const response = await fetchWithRetry(url, {
+    const requestOptions = {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: data ? JSON.stringify(data) : undefined,
       ...options,
-    });
+    };
+    
+    const response = await fetchWithRetry(url, requestOptions);
 
-    return processResponse<T>(response);
+    return processResponse<T>(response, requestOptions);
   }
 
   // Método PATCH
   async patch<T>(endpoint: string, data?: any, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    
-    const response = await fetchWithRetry(url, {
+    const requestOptions = {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: data ? JSON.stringify(data) : undefined,
       ...options,
-    });
+    };
+    
+    const response = await fetchWithRetry(url, requestOptions);
 
-    return processResponse<T>(response);
+    return processResponse<T>(response, requestOptions);
   }
 
   // Método DELETE
   async delete<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    
-    const response = await fetchWithRetry(url, {
+    const requestOptions = {
       method: 'DELETE',
       headers: getAuthHeaders(),
       ...options,
-    });
+    };
+    
+    const response = await fetchWithRetry(url, requestOptions);
 
-    return processResponse<T>(response);
+    return processResponse<T>(response, requestOptions);
   }
 
   // Método para peticiones sin autenticación

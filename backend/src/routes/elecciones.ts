@@ -1,6 +1,6 @@
 import { Router } from "express";
 import prisma from "../prisma";
-import { authenticateToken, requireOrganizador } from "../middleware/auth";
+import { authenticateToken, requireOrganizador, requireUsuario } from "../middleware/auth";
 
 const router = Router();
 
@@ -12,8 +12,15 @@ router.use(authenticateToken);
  * Resumen desde vista v_elecciones_resumen
  * REVISAR PORQUE NO SIRVE
  */
-router.get("/resumen/lista", async (_, res) => {
+router.get("/resumen/lista", async (req, res) => {
   try {
+    const usuario = (req as any).usuario; // Usuario del token
+    
+    // Construir filtro por usuario
+    const userFilter = usuario.rol !== 'ADMIN' 
+      ? `WHERE e.id_usuario_creador = ${usuario.id_usuario} AND e.deleted_at IS NULL`
+      : 'WHERE e.deleted_at IS NULL';
+    
     const resumen = await prisma.$queryRawUnsafe(
       `SELECT 
           e.id_eleccion,
@@ -26,6 +33,7 @@ router.get("/resumen/lista", async (_, res) => {
           e.updated_at
       FROM "Eleccion" e
       LEFT JOIN "Cargo" c ON e.id_eleccion = c.id_eleccion
+      ${userFilter}
       GROUP BY e.id_eleccion, e.nombre, e.fecha, e.estado, e.descripcion, e.created_at, e.updated_at
       ORDER BY e.fecha DESC`
     );
@@ -43,8 +51,15 @@ router.get("/resumen/lista", async (_, res) => {
 router.get("/", async (req, res) => {
   try {
     const { estado, anio } = req.query;
+    const usuario = (req as any).usuario; // Usuario del token
 
     const where: any = { deleted_at: null };
+    
+    // Filtrar por usuario: ADMIN ve todas, USUARIO solo ve las suyas
+    if (usuario.rol !== 'ADMIN') {
+      where.id_usuario_creador = usuario.id_usuario;
+    }
+    
     if (estado) where.estado = String(estado);
     if (anio) {
       const anioNum = Number(anio);
@@ -110,7 +125,7 @@ router.get("/:id", async (req, res) => {
  * POST /api/elecciones
  * Crear nueva elección
  */
-router.post("/", requireOrganizador, async (req, res) => {
+router.post("/", requireUsuario, async (req, res) => {
   try {
     const { nombre, descripcion, fecha, anio } = req.body;
 
@@ -140,7 +155,7 @@ router.post("/", requireOrganizador, async (req, res) => {
  * PUT /api/elecciones/:id
  * Actualizar elección
  */
-router.put("/:id", requireOrganizador, async (req, res) => {
+router.put("/:id", requireUsuario, async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, descripcion } = req.body;
@@ -164,7 +179,7 @@ router.put("/:id", requireOrganizador, async (req, res) => {
  * DELETE /api/elecciones/:id
  * Eliminar elección
  */
-router.delete("/:id", requireOrganizador, async (req, res) => {
+router.delete("/:id", requireUsuario, async (req, res) => {
   const { id } = req.params;
   try {
     await prisma.eleccion.delete({
@@ -180,7 +195,7 @@ router.delete("/:id", requireOrganizador, async (req, res) => {
  * PATCH /api/elecciones/:id/estado
  * Cambiar estado de elección
  */
-router.patch("/:id/estado", requireOrganizador, async (req, res) => {
+router.patch("/:id/estado", requireUsuario, async (req, res) => {
   const { id } = req.params;
   const { estado } = req.body;
 

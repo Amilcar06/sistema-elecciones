@@ -1,6 +1,6 @@
 import { Router } from "express";
 import prisma from "../prisma";
-import { authenticateToken, requireOrganizador } from "../middleware/auth";
+import { authenticateToken, requireOrganizador, requireUsuario } from "../middleware/auth";
 
 const router = Router();
 
@@ -14,6 +14,7 @@ router.use(authenticateToken);
 router.get("/", async (req, res) => {
   try {
     const { id_eleccion, estado } = req.query;
+    const usuario = (req as any).usuario; // Usuario del token
     
     const where: any = {};
     if (id_eleccion) where.id_eleccion = Number(id_eleccion);
@@ -24,13 +25,18 @@ router.get("/", async (req, res) => {
       include: {
         catalogo: true,
         eleccion: {
-          select: { id_eleccion: true, nombre: true, fecha: true }
+          select: { id_eleccion: true, nombre: true, fecha: true, id_usuario_creador: true }
         }
       },
       orderBy: { orden: "asc" }
     });
     
-    res.json(cargos);
+    // Filtrar por usuario: ADMIN ve todos, USUARIO solo ve los de sus elecciones
+    const cargosFiltrados = usuario.rol === 'ADMIN' 
+      ? cargos 
+      : cargos.filter(cargo => cargo.eleccion?.id_usuario_creador === usuario.id_usuario);
+    
+    res.json(cargosFiltrados);
   } catch (error) {
     res.status(500).json({ error: "Error al listar cargos", detalle: error });
   }
@@ -68,7 +74,7 @@ router.get("/:id", async (req, res) => {
  * POST /api/cargos
  * Crear nuevo cargo en una elección
  */
-router.post("/", requireOrganizador, async (req, res) => {
+router.post("/", requireUsuario, async (req, res) => {
   try {
     const { id_eleccion, id_catalogo, orden, estado } = req.body;
 
@@ -107,7 +113,7 @@ router.post("/", requireOrganizador, async (req, res) => {
  * PUT /api/cargos/:id
  * Actualizar cargo
  */
-router.put("/:id", requireOrganizador, async (req, res) => {
+router.put("/:id", requireUsuario, async (req, res) => {
   const { id } = req.params;
   const { estado, orden } = req.body;
 
@@ -140,7 +146,7 @@ router.put("/:id", requireOrganizador, async (req, res) => {
  * DELETE /api/cargos/:id
  * Eliminar cargo
  */
-router.delete("/:id", requireOrganizador, async (req, res) => {
+router.delete("/:id", requireUsuario, async (req, res) => {
   const { id } = req.params;
   try {
     await prisma.cargo.delete({

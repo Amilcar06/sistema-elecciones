@@ -51,7 +51,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const data = await authService.login(email, password);
       setToken(data.token);
       setUsuario(data.usuario);
-      authService.setToken(data.token);
+      
+      // Guardar ambos tokens si están disponibles
+      if (data.refreshToken) {
+        authService.setTokens(data.token, data.refreshToken);
+      } else {
+        authService.setToken(data.token);
+      }
+      
       authService.setUser(data.usuario);
       return true;
     } catch (error) {
@@ -74,6 +81,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const checkAuth = async (): Promise<boolean> => {
     const storedToken = authService.getToken();
+    const storedRefreshToken = authService.getRefreshToken();
     const storedUser = authService.getUser();
 
     if (!storedToken || !storedUser) {
@@ -89,6 +97,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return true;
     } catch (error) {
       console.error('Error verificando autenticación:', error);
+      
+      // Si el token expiró pero tenemos refresh token, intentar refrescar
+      if (storedRefreshToken) {
+        try {
+          const refreshData = await authService.refreshToken();
+          if (refreshData) {
+            setToken(refreshData.token);
+            return true;
+          }
+        } catch (refreshError) {
+          console.error('Error refrescando token:', refreshError);
+        }
+      }
+      
       authService.clearAuth();
       return false;
     }

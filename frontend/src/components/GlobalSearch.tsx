@@ -22,6 +22,7 @@ import { useNavigate } from 'react-router-dom';
 import { getElecciones } from '../services/eleccionService';
 import { getCargos } from '../services/cargoService';
 import { listarCandidatos } from '../services/candidatoService';
+import { useAuth } from '../contexts/AuthContext';
 // Hook simple para debounce de valores
 function useDebounceValue<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -70,6 +71,7 @@ export function GlobalSearch({ isOpen, onClose, placeholder = "Buscar elecciones
   const [showSuggestions, setShowSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const { isAdmin, usuario } = useAuth();
   
   // Debounce la búsqueda para evitar demasiadas peticiones
   const debouncedQuery = useDebounceValue(query, 300);
@@ -158,10 +160,17 @@ export function GlobalSearch({ isOpen, onClose, placeholder = "Buscar elecciones
       // Buscar elecciones
       try {
         const elecciones = await getElecciones();
-        const eleccionesFiltradas = elecciones.filter(eleccion =>
+        let eleccionesFiltradas = elecciones.filter(eleccion =>
           eleccion.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
           (eleccion.descripcion && eleccion.descripcion.toLowerCase().includes(searchQuery.toLowerCase()))
         );
+        
+        // Filtrar por usuario: ADMIN ve todas, USUARIO solo ve las suyas
+        if (!isAdmin && usuario) {
+          eleccionesFiltradas = eleccionesFiltradas.filter(eleccion => 
+            eleccion.id_usuario_creador === usuario.id_usuario
+          );
+        }
         
         eleccionesFiltradas.forEach(eleccion => {
           searchResults.push({
@@ -184,9 +193,16 @@ export function GlobalSearch({ isOpen, onClose, placeholder = "Buscar elecciones
       // Buscar cargos (solo si hay elecciones)
       try {
         const cargos = await getCargos();
-        const cargosFiltrados = cargos.filter(cargo =>
+        let cargosFiltrados = cargos.filter(cargo =>
           cargo.catalogo?.nombre.toLowerCase().includes(searchQuery.toLowerCase())
         );
+        
+        // Filtrar por usuario: ADMIN ve todos, USUARIO solo ve los de sus elecciones
+        if (!isAdmin && usuario) {
+          cargosFiltrados = cargosFiltrados.filter(cargo => 
+            cargo.eleccion?.id_usuario_creador === usuario.id_usuario
+          );
+        }
         
         cargosFiltrados.forEach(cargo => {
           searchResults.push({
@@ -208,9 +224,16 @@ export function GlobalSearch({ isOpen, onClose, placeholder = "Buscar elecciones
       // Buscar candidatos
       try {
         const candidatos = await listarCandidatos();
-        const candidatosFiltrados = candidatos.filter(candidato =>
+        let candidatosFiltrados = candidatos.filter(candidato =>
           candidato.nombre_completo.toLowerCase().includes(searchQuery.toLowerCase())
         );
+        
+        // Filtrar por usuario: ADMIN ve todos, USUARIO solo ve los de sus elecciones
+        if (!isAdmin && usuario) {
+          candidatosFiltrados = candidatosFiltrados.filter(candidato => 
+            candidato.cargo?.eleccion?.id_usuario_creador === usuario.id_usuario
+          );
+        }
         
         candidatosFiltrados.forEach(candidato => {
           searchResults.push({

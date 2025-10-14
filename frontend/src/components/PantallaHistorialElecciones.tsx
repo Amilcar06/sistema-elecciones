@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ArrowLeft, Calendar, Trophy, Users, Eye, Home, AlertCircle, RefreshCw, Play, CheckCircle, Link, Search, Filter, BarChart3, Clock, CheckCheck } from 'lucide-react';
 import type { Eleccion } from '../services/eleccionService';
 import { cambiarEstadoEleccion } from '../services/eleccionService';
+import { useAuth } from '../contexts/AuthContext';
 
 interface HistoryScreenProps {
   elections: Eleccion[];
@@ -18,6 +19,7 @@ interface HistoryScreenProps {
 }
 
 export function PantallaHistorialElecciones({ elections, onSelectElection, onBack, onHome, onElectionUpdated, onContinueElection }: HistoryScreenProps) {
+  const { isAdmin, usuario } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [loadingElectionId, setLoadingElectionId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,6 +44,13 @@ export function PantallaHistorialElecciones({ elections, onSelectElection, onBac
     try {
       let filtered = elections
         .filter(election => election && election.id_eleccion && election.nombre)
+        .filter(election => {
+          // Filtro por usuario: ADMIN ve todas, USUARIO solo ve las suyas
+          if (!isAdmin && usuario) {
+            return election.id_usuario_creador === usuario.id_usuario;
+          }
+          return true;
+        })
         .filter(election => {
           // Filtro por búsqueda
           if (searchTerm) {
@@ -287,7 +296,10 @@ export function PantallaHistorialElecciones({ elections, onSelectElection, onBac
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900">Historial de Elecciones</h1>
                   <p className="text-gray-600 mt-1">
-                    Gestiona y consulta todas tus elecciones
+                    {isAdmin 
+                      ? 'Gestiona y consulta todas las elecciones del sistema'
+                      : 'Gestiona y consulta tus elecciones'
+                    }
                   </p>
                 </div>
               </div>

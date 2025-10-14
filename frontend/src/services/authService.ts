@@ -1,4 +1,5 @@
 import { apiClient } from '../api/client';
+import { AUTH_CONFIG } from '../api/config';
 import { 
   LoginRequest, 
   LoginResponse, 
@@ -73,24 +74,82 @@ export const authService = {
   },
 
   /**
-   * Obtener token del localStorage
+   * Refrescar access token usando refresh token
+   */
+  refreshToken: async (): Promise<{ token: string; refreshToken: string } | null> => {
+    try {
+      const refreshToken = localStorage.getItem(AUTH_CONFIG.REFRESH_TOKEN_KEY);
+      
+      if (!refreshToken) {
+        return null;
+      }
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001/api'}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to refresh token');
+      }
+
+      const data = await response.json();
+      
+      // Actualizar tokens en localStorage
+      authService.setTokens(data.token, data.refreshToken);
+      
+      return data;
+    } catch (error) {
+      console.error('Error refreshing token:', error);
+      authService.clearAuth();
+      return null;
+    }
+  },
+
+  /**
+   * Obtener access token del localStorage
    */
   getToken: (): string | null => {
-    return localStorage.getItem('token');
+    return localStorage.getItem(AUTH_CONFIG.TOKEN_KEY);
   },
 
   /**
-   * Guardar token en localStorage
+   * Obtener refresh token del localStorage
+   */
+  getRefreshToken: (): string | null => {
+    return localStorage.getItem(AUTH_CONFIG.REFRESH_TOKEN_KEY);
+  },
+
+  /**
+   * Guardar access token en localStorage
    */
   setToken: (token: string): void => {
-    localStorage.setItem('token', token);
+    localStorage.setItem(AUTH_CONFIG.TOKEN_KEY, token);
   },
 
   /**
-   * Eliminar token del localStorage
+   * Guardar ambos tokens en localStorage
+   */
+  setTokens: (accessToken: string, refreshToken: string): void => {
+    localStorage.setItem(AUTH_CONFIG.TOKEN_KEY, accessToken);
+    localStorage.setItem(AUTH_CONFIG.REFRESH_TOKEN_KEY, refreshToken);
+  },
+
+  /**
+   * Eliminar access token del localStorage
    */
   removeToken: (): void => {
-    localStorage.removeItem('token');
+    localStorage.removeItem(AUTH_CONFIG.TOKEN_KEY);
+  },
+
+  /**
+   * Eliminar refresh token del localStorage
+   */
+  removeRefreshToken: (): void => {
+    localStorage.removeItem(AUTH_CONFIG.REFRESH_TOKEN_KEY);
   },
 
   /**
@@ -120,6 +179,7 @@ export const authService = {
    */
   clearAuth: (): void => {
     authService.removeToken();
+    authService.removeRefreshToken();
     authService.removeUser();
   }
 };

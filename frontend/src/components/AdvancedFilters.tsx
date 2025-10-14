@@ -183,8 +183,7 @@ export function AdvancedFilters({
         return [
           { name: 'Activos', filters: { estado: 'ACTIVO' } },
           { name: 'Administradores', filters: { rol: 'ADMIN' } },
-          { name: 'Organizadores', filters: { rol: 'ORGANIZADOR' } },
-          { name: 'Observadores', filters: { rol: 'OBSERVADOR' } },
+          { name: 'Usuarios', filters: { rol: 'USUARIO' } }
         ];
       default:
         return [];
@@ -479,8 +478,7 @@ export function AdvancedFilters({
               'rol',
               [
                 { value: 'ADMIN', label: 'Administrador' },
-                { value: 'ORGANIZADOR', label: 'Organizador' },
-                { value: 'OBSERVADOR', label: 'Observador' }
+                { value: 'USUARIO', label: 'Usuario' }
               ],
               'Todos los roles'
             )}
