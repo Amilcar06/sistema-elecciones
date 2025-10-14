@@ -11,7 +11,7 @@
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "prisma:seed": "prisma db seed",
-    "postinstall": "npm install --save-dev @types/node @types/express @types/cors @types/jsonwebtoken @types/bcryptjs && prisma generate",
+    "postinstall": "prisma generate",
     "deploy": "prisma migrate deploy && prisma db seed"
   },
   "prisma": {
