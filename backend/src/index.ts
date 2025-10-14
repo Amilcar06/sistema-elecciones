@@ -20,7 +20,7 @@ app.use(helmetConfig);
 app.use(getRealIP);
 app.use(apiRateLimit);
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'http://localhost:5173',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -43,7 +43,7 @@ app.use("/api/catalogo-cargos", catalogoCargoRouter);
 app.use("/api/publicaciones", publicacionesRouter);
 app.use("/api/dashboard", dashboardRouter);
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () =>
-  console.log(`Servidor corriendo en http://localhost:${PORT}`)
+  console.log(`Servidor corriendo en puerto ${PORT}`)
 );
