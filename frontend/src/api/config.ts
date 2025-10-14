@@ -23,3 +23,5 @@ export const AUTH_CONFIG = {
   REFRESH_TOKEN_DURATION: 7 * 24 * 60 * 60 * 1000, // 7 días en milisegundos
   TOKEN_REFRESH_THRESHOLD: 5 * 60 * 1000, // 5 minutos antes de expirar
 } as const;
+
+console.log("🌐 API BASE URL:", import.meta.env.VITE_API_URL);
