@@ -43,7 +43,7 @@ app.use(
 );
 
 // FIX para Express 5 — path-to-regexp error
-app.options("(.*)", cors());
+app.options("/:path*", cors());
 
 // Middlewares de seguridad
 app.use(helmetConfig);
