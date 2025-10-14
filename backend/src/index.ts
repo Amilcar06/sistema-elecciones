@@ -15,17 +15,25 @@ import { helmetConfig, apiRateLimit, getRealIP } from "./middleware/security";
 
 const app = express();
 
+// Render usa un proxy inverso → hay que confiar en él
+app.set("trust proxy", 1);
+
 // Middleware de seguridad
 app.use(helmetConfig);
 app.use(getRealIP);
 app.use(apiRateLimit);
-app.use(cors({
-  origin: process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'http://localhost:5173',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-app.use(express.json({ limit: '10mb' }));
+app.use(
+  cors({
+    origin:
+      process.env.FRONTEND_URL ||
+      process.env.CORS_ORIGIN ||
+      "http://localhost:5173",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+app.use(express.json({ limit: "10mb" }));
 
 // Health check
 app.get("/api/health", (req, res) => res.send("Backend funcionando"));
