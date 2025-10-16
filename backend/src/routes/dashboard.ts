@@ -65,6 +65,59 @@ router.get('/stats', requireOrganizador, async (req: Request, res: Response) => 
 });
 
 /**
+ * POST /api/dashboard/usuarios
+ * Crear usuario (solo admin)
+ */
+router.post('/usuarios', 
+  requireAdmin,
+  auditMiddleware('CREATE', 'Usuario'),
+  async (req: Request, res: Response) => {
+    try {
+      const { nombre, apellido, email, rol, estado, password } = req.body;
+
+      if (!nombre || !apellido || !email || !rol || !password) {
+        return res.status(400).json({ error: 'Faltan campos obligatorios' });
+      }
+
+      // Verifica si el email ya existe
+      const existe = await prisma.usuario.findUnique({ where: { email } });
+      if (existe) {
+        return res.status(409).json({ error: 'El email ya está registrado' });
+      }
+
+      // Hash de la contraseña (usa bcrypt)
+      const bcrypt = require('bcryptjs');
+      const password_hash = await bcrypt.hash(password, 10);
+
+      const usuario = await prisma.usuario.create({
+        data: {
+          nombre,
+          apellido,
+          email,
+          rol,
+          estado,
+          password_hash
+        },
+        select: {
+          id_usuario: true,
+          email: true,
+          nombre: true,
+          apellido: true,
+          rol: true,
+          estado: true,
+          created_at: true
+        }
+      });
+
+      res.status(201).json({ usuario });
+    } catch (error) {
+      console.error('Error creando usuario:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  }
+);
+
+/**
  * GET /api/dashboard/usuarios
  * Listar usuarios (solo admin)
  */

@@ -4,13 +4,16 @@ import { EstadoEleccion } from "../api/types";
 export interface Eleccion {
   id_eleccion: number;
   nombre: string;
-  fecha: string;        // en formato ISO
-  anio?: number;
+  fecha: string; 
+  estado: EstadoEleccion; 
   descripcion?: string;
-  estado: EstadoEleccion;
   created_at?: string;
   updated_at?: string;
-  cargos?: any[];       // puedes tipar mejor según tu modelo
+  deleted_at?: string | null;
+  cargos?: any[];  
+  id_usuario_creador?: any; 
+  usuario_creador?: any; 
+  publicaciones?: any[];
 }
 
 // Obtener todas las elecciones

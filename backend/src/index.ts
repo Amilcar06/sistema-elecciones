@@ -1,5 +1,8 @@
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 import eleccionesRouter from "./routes/elecciones";
 import cargosRouter from "./routes/cargos";
@@ -18,12 +21,16 @@ const app = express();
 // Render usa proxy inverso → necesario para CORS y rate limit
 app.set("trust proxy", 1);
 
-// Orígenes permitidos (Render + Netlify + local)
-const allowedOrigins = [
-  process.env.FRONTEND_URL, // configurado en Render
-  "https://sistema-eleccion.netlify.app",
-  "http://localhost:5173",
-].filter(Boolean);
+// Orígenes permitidos desde variable de entorno (puede ser una lista separada por comas)
+const allowedOrigins = (process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : [
+      process.env.FRONTEND_URL,
+      "https://sistema-eleccion.netlify.app",
+      "http://localhost:5173",
+      "http://localhost:3000",
+    ]
+).filter(Boolean);
 
 // Configuración de CORS
 app.use(
@@ -73,7 +80,7 @@ app.use("/api/catalogo-cargos", catalogoCargoRouter);
 app.use("/api/publicaciones", publicacionesRouter);
 app.use("/api/dashboard", dashboardRouter);
 
-// Servidor en Render
+// Servidor
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`✅ Servidor corriendo en puerto ${PORT}`);

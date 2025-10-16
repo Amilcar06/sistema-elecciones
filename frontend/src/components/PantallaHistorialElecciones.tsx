@@ -6,7 +6,7 @@ import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { ArrowLeft, Calendar, Trophy, Users, Eye, Home, AlertCircle, RefreshCw, Play, CheckCircle, Link, Search, Filter, BarChart3, Clock, CheckCheck } from 'lucide-react';
 import type { Eleccion } from '../services/eleccionService';
-import { cambiarEstadoEleccion } from '../services/eleccionService';
+import { cambiarEstadoEleccion, eliminarEleccion } from '../services/eleccionService';
 import { useAuth } from '../contexts/AuthContext';
 
 interface HistoryScreenProps {
@@ -158,6 +158,23 @@ export function PantallaHistorialElecciones({ elections, onSelectElection, onBac
     }
   };
 
+    // Función para eliminar una elección
+  const handleDeleteElection = async (election: Eleccion) => {
+    if (!window.confirm(`¿Seguro que deseas eliminar la elección "${election.nombre}"? Esta acción no se puede deshacer.`)) return;
+    try {
+      await eliminarEleccion(election.id_eleccion);
+      // Si tienes un callback para actualizar la lista, úsalo:
+      if (onElectionUpdated) {
+        onElectionUpdated(election);
+      } else {
+        // Si no, recarga la página para refrescar la lista
+        window.location.reload();
+      }
+    } catch (error: any) {
+      setError(error.message || "Error al eliminar elección");
+    }
+  };
+
   const handleContinueElection = async (election: Eleccion) => {
     if (loadingElectionId === election.id_eleccion) return;
     
@@ -165,7 +182,6 @@ export function PantallaHistorialElecciones({ elections, onSelectElection, onBac
     try {
       // Determinar en qué paso está la elección
       const step = determineElectionStep(election);
-      
       // Si la elección está en DRAFT y no tiene cargos, cambiar estado a EN_CURSO
       if (election.estado === "DRAFT" && step.screen === 'positions') {
         const updatedElection = await cambiarEstadoEleccion(election.id_eleccion, "EN_CURSO");
@@ -173,7 +189,6 @@ export function PantallaHistorialElecciones({ elections, onSelectElection, onBac
           onElectionUpdated(updatedElection);
         }
       }
-      
       // Navegar a la pantalla correspondiente
       if (onContinueElection) {
         onContinueElection(election, step.screen, step.position);
@@ -266,7 +281,7 @@ export function PantallaHistorialElecciones({ elections, onSelectElection, onBac
       
       const totalVotes = election.cargos?.reduce((sum, position) => {
         if (!position || !position.candidatos) return sum;
-        return sum + position.candidatos.reduce((posSum, candidate) => {
+        return sum + position.candidatos.reduce((posSum: any, candidate: { resultados: any[]; }) => {
           if (!candidate || !candidate.resultados) return posSum;
           return posSum + candidate.resultados.reduce((rSum: number, r: any) => {
             return rSum + (r && typeof r.votos === 'number' ? r.votos : 0);
@@ -503,6 +518,16 @@ export function PantallaHistorialElecciones({ elections, onSelectElection, onBac
                             >
                               <Link className="h-4 w-4 mr-2" />
                               URL Pública
+                            </Button>
+                          )}
+
+                          {/* Botón Eliminar */}
+                          {(isAdmin || election.id_usuario_creador === usuario?.id_usuario) && (
+                            <Button
+                              variant="destructive"
+                              onClick={() => handleDeleteElection(election)}
+                            >
+                              Eliminar
                             </Button>
                           )}
                         </div>

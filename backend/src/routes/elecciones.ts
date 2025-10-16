@@ -128,6 +128,7 @@ router.get("/:id", async (req, res) => {
 router.post("/", requireUsuario, async (req, res) => {
   try {
     const { nombre, descripcion, fecha, anio } = req.body;
+    const usuario = (req as any).usuario;
 
     if (!nombre) {
       return res.status(400).json({ error: "El nombre es obligatorio" });
@@ -142,6 +143,7 @@ router.post("/", requireUsuario, async (req, res) => {
         descripcion,
         fecha: fechaEleccion,
         estado: "DRAFT", 
+        id_usuario_creador: usuario.id_usuario,
       },
     });
 
@@ -174,20 +176,90 @@ router.put("/:id", requireUsuario, async (req, res) => {
   }
 });
 
-
 /**
  * DELETE /api/elecciones/:id
- * Eliminar elección
+ * Eliminar una elección (solo el creador o admin) - SOFT DELETE EN CASCADA
  */
-router.delete("/:id", requireUsuario, async (req, res) => {
+router.delete("/:id", authenticateToken, async (req, res) => {
   const { id } = req.params;
+  const usuario = (req as any).usuario;
+
   try {
-    await prisma.eleccion.delete({
-      where: { id_eleccion: Number(id) },
+    // Busca la elección
+    const eleccion = await prisma.eleccion.findUnique({
+      where: { id_eleccion: Number(id) }
     });
-    res.json({ message: "Elección eliminada" });
+
+    if (!eleccion) {
+      return res.status(404).json({ error: "Elección no encontrada" });
+    }
+
+    // Solo el admin o el creador pueden eliminar
+    if (
+      usuario.rol !== "ADMIN" &&
+      eleccion.id_usuario_creador !== usuario.id_usuario
+    ) {
+      return res.status(403).json({ error: "No autorizado para eliminar esta elección" });
+    }
+
+    // Soft delete en cascada (igual que en dashboard.ts)
+    const now = new Date();
+
+    await prisma.$transaction(async (tx) => {
+      // Eliminar resultados
+      await tx.resultado.updateMany({
+        where: {
+          ronda: {
+            cargo: {
+              id_eleccion: Number(id)
+            }
+          }
+        },
+        data: { deleted_at: now }
+      });
+
+      // Eliminar rondas
+      await tx.ronda.updateMany({
+        where: {
+          cargo: {
+            id_eleccion: Number(id)
+          }
+        },
+        data: { deleted_at: now }
+      });
+
+      // Eliminar candidatos
+      await tx.candidato.updateMany({
+        where: {
+          cargo: {
+            id_eleccion: Number(id)
+          }
+        },
+        data: { deleted_at: now }
+      });
+
+      // Eliminar cargos
+      await tx.cargo.updateMany({
+        where: { id_eleccion: Number(id) },
+        data: { deleted_at: now }
+      });
+
+      // Eliminar publicaciones
+      await tx.publicacionResultado.updateMany({
+        where: { id_eleccion: Number(id) },
+        data: { deleted_at: now }
+      });
+
+      // Eliminar elección
+      await tx.eleccion.update({
+        where: { id_eleccion: Number(id) },
+        data: { deleted_at: now }
+      });
+    });
+
+    res.json({ mensaje: "Elección eliminada correctamente" });
   } catch (error) {
-    res.status(404).json({ error: "Elección no encontrada", detalle: error });
+    res.status(500).json({ error: "Error al eliminar elección", detalle: error });
   }
 });
 

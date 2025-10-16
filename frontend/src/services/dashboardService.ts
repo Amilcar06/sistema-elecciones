@@ -114,6 +114,25 @@ export const dashboardService = {
   },
 
   /**
+   * Crear usuario
+   */
+  createUsuario: async (data: {
+    nombre: string;
+    apellido: string;
+    email: string;
+    rol: string;
+    estado: string;
+    password: string;
+  }): Promise<Usuario> => {
+    try {
+      const res = await apiClient.post<{ usuario: Usuario }>('/dashboard/usuarios', data);
+      return res.usuario;
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Error creando usuario');
+    }
+  },
+
+  /**
    * Obtener usuarios con filtros
    */
   getUsuarios: async (filters: UsuarioFilters = {}): Promise<UsuarioResponse> => {

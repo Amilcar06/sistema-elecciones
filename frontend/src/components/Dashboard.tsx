@@ -111,6 +111,68 @@ const EditUsuarioForm: React.FC<EditUsuarioFormProps> = ({ usuario, onSave, onCa
   );
 };
 
+// Formulario para crear usuario
+const CreateUsuarioForm: React.FC<{ onSave: (data: any) => void; onCancel: () => void }> = ({ onSave, onCancel }) => {
+  const [formData, setFormData] = useState({
+    nombre: '',
+    apellido: '',
+    email: '',
+    rol: 'USUARIO',
+    estado: 'ACTIVO',
+    password: ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="nombre">Nombre</Label>
+        <Input id="nombre" value={formData.nombre} onChange={e => setFormData(f => ({ ...f, nombre: e.target.value }))} required />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="apellido">Apellido</Label>
+        <Input id="apellido" value={formData.apellido} onChange={e => setFormData(f => ({ ...f, apellido: e.target.value }))} required />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input id="email" type="email" value={formData.email} onChange={e => setFormData(f => ({ ...f, email: e.target.value }))} required />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="rol">Rol</Label>
+        <Select value={formData.rol} onValueChange={value => setFormData(f => ({ ...f, rol: value }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ADMIN">Administrador</SelectItem>
+            <SelectItem value="USUARIO">Usuario</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="estado">Estado</Label>
+        <Select value={formData.estado} onValueChange={value => setFormData(f => ({ ...f, estado: value }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ACTIVO">Activo</SelectItem>
+            <SelectItem value="INACTIVO">Inactivo</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="password">Contraseña</Label>
+        <Input id="password" type="password" value={formData.password} onChange={e => setFormData(f => ({ ...f, password: e.target.value }))} required />
+      </div>
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>
+        <Button type="submit">Crear Usuario</Button>
+      </div>
+    </form>
+  );
+};
+
 interface DashboardStats {
   usuarios: {
     total: number;
@@ -176,6 +238,7 @@ export const Dashboard: React.FC = () => {
   // Estados para modal de edición
   const [editingUsuario, setEditingUsuario] = useState<Usuario | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('stats');
 
   // Estados para filtros
@@ -260,6 +323,17 @@ export const Dashboard: React.FC = () => {
       error('Error actualizando usuario', 'No se pudo actualizar el usuario. Inténtalo de nuevo.');
     }
   }, [editingUsuario]);
+
+  const handleCreateUsuario = useCallback(async (data: any) => {
+    try {
+      const nuevoUsuario = await dashboardService.createUsuario(data);
+      setUsuarios(prev => [nuevoUsuario, ...prev]);
+      setIsCreateModalOpen(false);
+      success('Usuario creado exitosamente', 'El usuario ha sido creado correctamente');
+    } catch (err: any) {
+      error('Error creando usuario', err.message || 'No se pudo crear el usuario');
+    }
+  }, []);
 
   const getRolBadgeVariant = useCallback((rol: string) => {
     switch (rol) {
@@ -505,6 +579,16 @@ export const Dashboard: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
+            <div className="flex justify-end">
+              <Button 
+                variant="default" 
+                className="w-full sm:w-auto"
+                onClick={() => setIsCreateModalOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Nuevo Usuario
+              </Button>
+            </div>
           </TabsContent>
 
         <TabsContent value="elecciones" className="space-y-4">
@@ -642,7 +726,23 @@ export const Dashboard: React.FC = () => {
           )}
         </DialogContent>
       </Dialog>
-      
+
+      {/* Modal de creación de usuario */}
+      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Crear Nuevo Usuario</DialogTitle>
+            <DialogDescription>
+              Ingresa los datos para crear un nuevo usuario.
+            </DialogDescription>
+          </DialogHeader>
+          <CreateUsuarioForm 
+            onSave={handleCreateUsuario}
+            onCancel={() => setIsCreateModalOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
       {/* Toast Container */}
       <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
     </div>
