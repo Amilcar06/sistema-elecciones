@@ -34,8 +34,8 @@ CREATE TABLE "public"."Usuario" (
 CREATE TABLE "public"."Sesion" (
     "id_sesion" SERIAL NOT NULL,
     "id_usuario" INTEGER NOT NULL,
-    "token" VARCHAR(500) NOT NULL,
-    "refresh_token" VARCHAR(500) NOT NULL,
+    "token" TEXT NOT NULL,
+    "refresh_token" TEXT NOT NULL,
     "expires_at" TIMESTAMP(3) NOT NULL,
     "absolute_expiry" TIMESTAMP(3) NOT NULL,
     "last_activity" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

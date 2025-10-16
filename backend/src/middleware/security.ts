@@ -17,9 +17,9 @@ export const createRateLimit = (windowMs: number, max: number, message?: string)
 
 // Rate limits específicos
 export const authRateLimit = createRateLimit(
-  15 * 60 * 1000, // 15 minutos
-  5, // 5 intentos por IP
-  'Demasiados intentos de login, intenta en 15 minutos'
+  1 * 60 * 1000,  // ventana de 1 minuto
+  50,             // máximo 50 intentos
+  'Demasiados intentos de login, intenta en 1 minuto'
 );
 
 export const apiRateLimit = createRateLimit(
