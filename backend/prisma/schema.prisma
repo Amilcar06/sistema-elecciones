@@ -30,13 +30,13 @@ model Usuario {
 model Sesion {
   id_sesion      Int      @id @default(autoincrement())
   id_usuario     Int
-  token          String   @db.VarChar(500)
-  refresh_token  String   @unique @db.VarChar(500)
+  token          String   @db.Text
+  refresh_token  String   @unique @db.Text
   expires_at     DateTime // Sliding expiration (extends with each request)
   absolute_expiry DateTime // Maximum session lifetime (7 days)
   last_activity  DateTime @default(now()) // Last request time for sliding window
   ip_address     String?  @db.VarChar(45)
-  user_agent     String?
+  user_agent     String?  @db.Text
   created_at     DateTime @default(now())
   usuario        Usuario  @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
 
