@@ -91,6 +91,9 @@ router.post('/login',
   async (req: Request, res: Response) => {
     try {
       const { email, password } = req.body;
+      
+      // Log inicio de intento de login
+      console.log(`🔑 Intento de login para: ${email} - ${new Date().toISOString()}`);
 
       // Buscar usuario
       const usuario = await prisma.usuario.findUnique({
@@ -137,23 +140,49 @@ router.post('/login',
         { expiresIn: '7d' }
       );
 
-      // Configurar expiraciones
-      const accessTokenExpiry = new Date(now.getTime() + (60 * 60 * 1000)); // 1 hora
-      const absoluteExpiry = new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 días
+      // Log tamaño de tokens
+      console.log({
+        tokenLength: accessToken.length,
+        refreshTokenLength: refreshToken.length,
+        tokenPreview: `${accessToken.substring(0, 50)}...`,
+        refreshTokenPreview: `${refreshToken.substring(0, 50)}...`
+      });
 
-      // Crear sesión con ambos tokens
-      await prisma.sesion.create({
+      // Limpiar sesiones antiguas antes de crear una nueva
+      await prisma.sesion.deleteMany({
+        where: {
+          OR: [
+            { expires_at: { lt: new Date() } },
+            { last_activity: { lt: new Date(Date.now() - 24 * 60 * 60 * 1000) } }
+          ],
+          id_usuario: usuario.id_usuario
+        }
+      });
+
+      // Verificar sesiones simultáneas
+      const activeSessions = await prisma.sesion.count({
+        where: {
+          id_usuario: usuario.id_usuario,
+          expires_at: { gt: new Date() }
+        }
+      });
+
+      console.log(`👤 Sesiones activas para ${email}: ${activeSessions}`);
+
+      // Crear nueva sesión
+      const sesion = await prisma.sesion.create({
         data: {
           id_usuario: usuario.id_usuario,
           token: accessToken,
           refresh_token: refreshToken,
-          expires_at: accessTokenExpiry,
-          absolute_expiry: absoluteExpiry,
-          last_activity: now,
-          ip_address: (req as any).realIP || req.ip,
+          expires_at: new Date(Date.now() + 60 * 60 * 1000), // 1 hora
+          absolute_expiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 días
+          ip_address: req.ip,
           user_agent: req.headers['user-agent']
         }
       });
+
+      console.log(`Login exitoso para ${email} - Session ID: ${sesion.id_sesion}`);
 
       // Actualizar último acceso
       await prisma.usuario.update({

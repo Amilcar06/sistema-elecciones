@@ -15,6 +15,7 @@ import authRouter from "./routes/auth";
 import dashboardRouter from "./routes/dashboard";
 
 import { helmetConfig, apiRateLimit, getRealIP } from "./middleware/security";
+import { cleanupSessions } from "./tasks/cleanupSessions";
 
 const app = express();
 
@@ -86,3 +87,15 @@ app.listen(PORT, () => {
   console.log(`✅ Servidor corriendo en puerto ${PORT}`);
   console.log(`🌍 Orígenes permitidos: ${allowedOrigins.join(", ")}`);
 });
+
+// Programar limpieza de sesiones cada 6 horas
+setInterval(async () => {
+  try {
+    await cleanupSessions();
+  } catch (error) {
+    console.error('Error en tarea programada de limpieza:', error);
+  }
+}, 6 * 60 * 60 * 1000);
+
+// Ejecutar limpieza inicial al arrancar
+cleanupSessions().catch(console.error);
