@@ -1,13 +1,85 @@
 import { apiClient } from '../api/client';
 import { AUTH_CONFIG } from '../api/config';
+import { API_BASE_URL } from '../api/config';
 import { 
   LoginRequest, 
   LoginResponse, 
   ChangePasswordRequest, 
   ChangePasswordResponse,
   AuthMeResponse,
-  AuthError 
+  AuthError, 
+  Usuario
 } from '../api/types';
+
+export async function login(email: string, password: string): Promise<LoginResponse> {
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Error en login');
+  }
+
+  return response.json();
+}
+
+export async function refreshToken(refreshToken: string): Promise<LoginResponse> {
+  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ refreshToken }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Error refreshing token');
+  }
+
+  return response.json();
+}
+
+export async function getMe(): Promise<Usuario> {
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    throw new Error('No token found');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/auth/me`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Error obteniendo información del usuario');
+  }
+
+  return response.json();
+}
+
+export async function logout(): Promise<void> {
+  const token = localStorage.getItem('token');
+  
+  if (!token) return;
+
+  try {
+    await fetch(`${API_BASE_URL}/auth/logout`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  } finally {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+  }
+}
 
 // Servicio de autenticación
 export const authService = {
@@ -19,6 +91,10 @@ export const authService = {
       const data: LoginRequest = { email, password };
       return await apiClient.post<LoginResponse>('/auth/login', data);
     } catch (error) {
+      // Manejo específico para errores de rate limiting
+      if (error instanceof Error && error.message.includes('429')) {
+        throw new Error('Demasiados intentos de login, intenta en 15 minutos');
+      }
       throw new Error(error instanceof Error ? error.message : 'Error en el login');
     }
   },
@@ -62,9 +138,27 @@ export const authService = {
   },
 
   /**
-   * Verificar si el token es válido
+   * Verificar si el token es válido (método ligero)
    */
   verifyToken: async (): Promise<boolean> => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001/api'}/auth/validate-token`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authService.getToken()}`
+        }
+      });
+      return response.ok;
+    } catch (error) {
+      return false;
+    }
+  },
+
+  /**
+   * Verificar si el token es válido (método completo con información del usuario)
+   */
+  verifyTokenWithUser: async (): Promise<boolean> => {
     try {
       await authService.getMe();
       return true;

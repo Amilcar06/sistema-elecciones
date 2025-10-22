@@ -6,6 +6,7 @@ import prisma from '../prisma';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 import { 
   authRateLimit, 
+  loginRateLimit,
   validateEmail, 
   validatePassword, 
   validateNombre, 
@@ -86,6 +87,7 @@ router.post('/register',
  * Iniciar sesión
  */
 router.post('/login', 
+  loginRateLimit, // usar rate limit más específico para login
   validateEmail,
   validateRequest,
   async (req: Request, res: Response) => {
@@ -148,47 +150,70 @@ router.post('/login',
         refreshTokenPreview: `${refreshToken.substring(0, 50)}...`
       });
 
-      // Limpiar sesiones antiguas antes de crear una nueva
-      await prisma.sesion.deleteMany({
-        where: {
-          OR: [
-            { expires_at: { lt: new Date() } },
-            { last_activity: { lt: new Date(Date.now() - 24 * 60 * 60 * 1000) } }
-          ],
-          id_usuario: usuario.id_usuario
+      // Usar transacción para operaciones atómicas de sesión
+      const result = await prisma.$transaction(async (tx) => {
+        // Limpiar sesiones antiguas
+        await tx.sesion.deleteMany({
+          where: {
+            OR: [
+              { expires_at: { lt: new Date() } },
+              { last_activity: { lt: new Date(Date.now() - 24 * 60 * 60 * 1000) } }
+            ],
+            id_usuario: usuario.id_usuario
+          }
+        });
+
+        // Verificar sesiones simultáneas y limitar a máximo 3 por usuario
+        const activeSessions = await tx.sesion.count({
+          where: {
+            id_usuario: usuario.id_usuario,
+            expires_at: { gt: new Date() }
+          }
+        });
+
+        console.log(`👤 Sesiones activas para ${email}: ${activeSessions}`);
+
+        // Si hay más de 3 sesiones activas, eliminar la más antigua
+        if (activeSessions >= 3) {
+          const oldestSession = await tx.sesion.findFirst({
+            where: {
+              id_usuario: usuario.id_usuario,
+              expires_at: { gt: new Date() }
+            },
+            orderBy: { last_activity: 'asc' }
+          });
+
+          if (oldestSession) {
+            await tx.sesion.delete({
+              where: { id_sesion: oldestSession.id_sesion }
+            });
+            console.log(`🗑️ Sesión antigua eliminada para ${email}: ${oldestSession.id_sesion}`);
+          }
         }
+
+        // Crear nueva sesión
+        const sesion = await tx.sesion.create({
+          data: {
+            id_usuario: usuario.id_usuario,
+            token: accessToken,
+            refresh_token: refreshToken,
+            expires_at: new Date(Date.now() + 60 * 60 * 1000), // 1 hora
+            absolute_expiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 días
+            ip_address: req.ip,
+            user_agent: req.headers['user-agent']
+          }
+        });
+
+        // Actualizar último acceso
+        await tx.usuario.update({
+          where: { id_usuario: usuario.id_usuario },
+          data: { ultimo_acceso: new Date() }
+        });
+
+        return sesion;
       });
 
-      // Verificar sesiones simultáneas
-      const activeSessions = await prisma.sesion.count({
-        where: {
-          id_usuario: usuario.id_usuario,
-          expires_at: { gt: new Date() }
-        }
-      });
-
-      console.log(`👤 Sesiones activas para ${email}: ${activeSessions}`);
-
-      // Crear nueva sesión
-      const sesion = await prisma.sesion.create({
-        data: {
-          id_usuario: usuario.id_usuario,
-          token: accessToken,
-          refresh_token: refreshToken,
-          expires_at: new Date(Date.now() + 60 * 60 * 1000), // 1 hora
-          absolute_expiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 días
-          ip_address: req.ip,
-          user_agent: req.headers['user-agent']
-        }
-      });
-
-      console.log(`Login exitoso para ${email} - Session ID: ${sesion.id_sesion}`);
-
-      // Actualizar último acceso
-      await prisma.usuario.update({
-        where: { id_usuario: usuario.id_usuario },
-        data: { ultimo_acceso: new Date() }
-      });
+      console.log(`Login exitoso para ${email} - Session ID: ${result.id_sesion}`);
 
       res.json({
         message: 'Login exitoso',
@@ -261,16 +286,24 @@ router.post('/refresh', async (req: Request, res: Response) => {
       { expiresIn: '1h' }
     );
 
-    // Actualizar sesión con nuevo access token
+    // Actualizar sesión con nuevo access token usando transacción
     const newAccessTokenExpiry = new Date(now.getTime() + (60 * 60 * 1000)); // 1 hora
     
-    await prisma.sesion.update({
-      where: { id_sesion: sesion.id_sesion },
-      data: {
-        token: newAccessToken,
-        expires_at: newAccessTokenExpiry,
-        last_activity: now
-      }
+    await prisma.$transaction(async (tx) => {
+      await tx.sesion.update({
+        where: { id_sesion: sesion.id_sesion },
+        data: {
+          token: newAccessToken,
+          expires_at: newAccessTokenExpiry,
+          last_activity: now
+        }
+      });
+
+      // Actualizar último acceso del usuario
+      await tx.usuario.update({
+        where: { id_usuario: sesion.usuario.id_usuario },
+        data: { ultimo_acceso: now }
+      });
     });
 
     res.json({
@@ -312,6 +345,29 @@ router.post('/logout', authenticateToken, async (req: Request, res: Response) =>
   } catch (error) {
     console.error('Error en logout:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+/**
+ * GET /api/auth/validate-token
+ * Validar token sin obtener información completa del usuario
+ */
+router.get('/validate-token', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    res.json({ 
+      valid: true, 
+      usuario: {
+        id_usuario: req.usuario!.id_usuario,
+        email: req.usuario!.email,
+        rol: req.usuario!.rol
+      }
+    });
+  } catch (error) {
+    console.error('Error validando token:', error);
+    res.status(401).json({ 
+      valid: false, 
+      error: 'Token inválido' 
+    });
   }
 });
 

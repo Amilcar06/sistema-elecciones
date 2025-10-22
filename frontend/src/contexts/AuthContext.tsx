@@ -33,6 +33,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showSessionExpired, setShowSessionExpired] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const isAuthenticated = !!usuario && !!token;
   const isAdmin = usuario?.rol === 'ADMIN';
@@ -85,25 +86,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const storedUser = authService.getUser();
 
     if (!storedToken || !storedUser) {
+      console.log('No hay token o usuario almacenado');
       setIsLoading(false);
       return false;
     }
 
     try {
-      // Verificar que el token sigue siendo válido
-      const data = await authService.getMe();
-      setToken(storedToken);
-      setUsuario(data.usuario);
-      return true;
-    } catch (error) {
-      console.error('Error verificando autenticación:', error);
+      // Primero intentar verificar si el token es válido (método ligero)
+      console.log('Verificando token almacenado...');
+      const isValid = await authService.verifyToken();
       
-      // Si el token expiró pero tenemos refresh token, intentar refrescar
+      if (isValid) {
+        console.log('Token válido, restaurando sesión');
+        setToken(storedToken);
+        setUsuario(storedUser);
+        return true;
+      }
+      
+      console.log('Token no válido, intentando refrescar...');
+      // Si el token no es válido pero tenemos refresh token, intentar refrescar
       if (storedRefreshToken) {
         try {
           const refreshData = await authService.refreshToken();
           if (refreshData) {
+            console.log('Token refrescado exitosamente');
             setToken(refreshData.token);
+            // Obtener información actualizada del usuario
+            const userData = await authService.getMe();
+            setUsuario(userData.usuario);
             return true;
           }
         } catch (refreshError) {
@@ -111,6 +121,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
       
+      console.log('No se pudo restaurar la sesión, limpiando datos');
+      authService.clearAuth();
+      return false;
+    } catch (error) {
+      console.error('Error verificando autenticación:', error);
+      // En caso de error de red, mantener la sesión local temporalmente
+      if (error instanceof Error && error.message.includes('fetch')) {
+        console.log('Error de red, manteniendo sesión local');
+        setToken(storedToken);
+        setUsuario(storedUser);
+        return true;
+      }
       authService.clearAuth();
       return false;
     }
@@ -118,12 +140,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const initAuth = async () => {
-      await checkAuth();
-      setIsLoading(false);
+      if (!isInitialized) {
+        await checkAuth();
+        setIsInitialized(true);
+        setIsLoading(false);
+      }
     };
 
     initAuth();
-  }, []);
+  }, [isInitialized]);
 
   // Configurar el manejador de errores de autenticación solo cuando esté autenticado
   useEffect(() => {

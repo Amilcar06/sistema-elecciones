@@ -36,9 +36,10 @@ export async function crearCandidato(
   activo = true
 ): Promise<Candidato> {
   try {
-    const data = { id_cargo, nombre: nombre_completo, activo };
+    const data = { id_cargo, nombre_completo, activo };
     return await apiClient.post<Candidato>('/candidatos', data);
   } catch (error) {
+    console.error('Error en crearCandidato:', error);
     throw new Error("Error al registrar candidato");
   }
 }
@@ -51,9 +52,10 @@ export async function actualizarCandidato(
   activo = true
 ): Promise<Candidato> {
   try {
-    const data = { nombre: nombre_completo, activo };
+    const data = { nombre_completo, activo };
     return await apiClient.put<Candidato>(`/candidatos/${id_candidato}`, data);
   } catch (error) {
+    console.error('Error en actualizarCandidato:', error);
     throw new Error("Error al actualizar candidato");
   }
 }

@@ -6,7 +6,7 @@ const RETRY_CONFIG = {
   maxRetries: 3,
   baseDelay: 1000, // 1 segundo
   maxDelay: 10000, // 10 segundos
-  retryableStatuses: [408, 429, 500, 502, 503, 504], // Errores que se pueden reintentar
+  retryableStatuses: [408, 500, 502, 503, 504], // Errores que se pueden reintentar (sin 429)
 };
 
 // Callback para manejar errores de autenticación
@@ -81,6 +81,19 @@ const refreshAccessToken = async (): Promise<string | null> => {
   }
 };
 
+// Función para verificar si un token está próximo a expirar
+const isTokenNearExpiry = (token: string): boolean => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const now = Math.floor(Date.now() / 1000);
+    const timeUntilExpiry = payload.exp - now;
+    // Considerar "próximo a expirar" si queda menos de 5 minutos
+    return timeUntilExpiry < 300; // 5 minutos
+  } catch {
+    return true; // Si no se puede decodificar, asumir que está expirado
+  }
+};
+
 // Función para obtener headers con autenticación
 const getAuthHeaders = (): Record<string, string> => {
   const token = getToken();
@@ -114,6 +127,10 @@ const fetchWithRetry = async (
     
     // Si la respuesta es exitosa o no es retryable, devolverla
     if (response.ok || !RETRY_CONFIG.retryableStatuses.includes(response.status)) {
+      // Manejo especial para rate limiting (429)
+      if (response.status === 429) {
+        console.warn(`Rate limit alcanzado para ${url}. No reintentando.`);
+      }
       return response;
     }
     
@@ -232,6 +249,14 @@ export class ApiClient {
   // Método GET
   async get<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
+    
+    // Verificar si el token está próximo a expirar antes de hacer la petición
+    const token = getToken();
+    if (token && isTokenNearExpiry(token)) {
+      console.log('Token próximo a expirar, intentando refrescar...');
+      await refreshAccessToken();
+    }
+    
     const requestOptions = {
       method: 'GET',
       headers: getAuthHeaders(),
@@ -246,6 +271,14 @@ export class ApiClient {
   // Método POST
   async post<T>(endpoint: string, data?: any, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
+    
+    // Verificar si el token está próximo a expirar antes de hacer la petición
+    const token = getToken();
+    if (token && isTokenNearExpiry(token)) {
+      console.log('Token próximo a expirar, intentando refrescar...');
+      await refreshAccessToken();
+    }
+    
     const requestOptions = {
       method: 'POST',
       headers: getAuthHeaders(),
