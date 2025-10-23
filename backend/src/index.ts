@@ -1,5 +1,5 @@
-import express from "express";
-import cors from "cors";
+import express from 'express';
+import cors from 'cors';
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -16,6 +16,7 @@ import dashboardRouter from "./routes/dashboard";
 
 import { helmetConfig, apiRateLimit, getRealIP } from "./middleware/security";
 import { cleanupSessions } from "./tasks/cleanupSessions";
+import { corsDebugMiddleware } from './middleware/security';
 
 const app = express();
 
@@ -30,23 +31,31 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS
       "https://sistema-eleccion.netlify.app",
       "http://localhost:5173",
       "http://localhost:3000",
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:5173",
     ]
 ).filter(Boolean);
+
+console.log("🌍 Orígenes permitidos:", allowedOrigins);
 
 // Configuración de CORS
 app.use(
   cors({
     origin: (origin, callback) => {
+      console.log(`🔍 Verificando origen: ${origin}`);
       if (!origin || allowedOrigins.includes(origin)) {
+        console.log(`✅ Origen permitido: ${origin}`);
         callback(null, true);
       } else {
         console.warn(`🚫 Bloqueado por CORS: ${origin}`);
+        console.warn(`📋 Orígenes permitidos: ${allowedOrigins.join(', ')}`);
         callback(new Error("No permitido por CORS"));
       }
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    maxAge: 86400 
   })
 );
 
@@ -57,10 +66,12 @@ app.options(/^.*$/, cors());
 app.use(helmetConfig);
 app.use(getRealIP);
 app.use(apiRateLimit);
+app.use(corsDebugMiddleware);
 app.use(express.json({ limit: "10mb" }));
 
 // Log para depurar CORS y tráfico (puedes quitar luego)
 app.use((req, res, next) => {
+  // No sobrescribir headers de CORS - dejar que el middleware de CORS los maneje
   console.log(`🌐 ${req.method} ${req.path} - Origin: ${req.headers.origin}`);
   next();
 });

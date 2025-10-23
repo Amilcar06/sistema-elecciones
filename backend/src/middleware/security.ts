@@ -18,14 +18,20 @@ export const createRateLimit = (windowMs: number, max: number, message?: string)
 // Rate limits específicos
 export const authRateLimit = createRateLimit(
   1 * 60 * 1000,  // ventana de 1 minuto
-  50,             // máximo 50 intentos
+  100,            // aumentar a 100 intentos
   'Demasiados intentos de login, intenta en 1 minuto'
 );
 
 export const apiRateLimit = createRateLimit(
   15 * 60 * 1000, // 15 minutos
-  100, // 100 requests por IP
+  200,            // aumentar a 200 requests por IP (menos restrictivo)
   'Demasiadas solicitudes a la API'
+);
+
+export const loginRateLimit = createRateLimit(
+  15 * 60 * 1000, // 15 minutos
+  process.env.NODE_ENV === 'development' ? 50 : 5, // 50 en desarrollo, 5 en producción
+  'Demasiados intentos de login, intenta en 15 minutos'
 );
 
 // Helmet configuration
@@ -114,5 +120,18 @@ export const getRealIP = (req: Request, res: Response, next: NextFunction) => {
   
   // Asignar la IP real a una propiedad personalizada
   (req as any).realIP = realIP;
+  next();
+};
+
+export const corsDebugMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  console.log('🌐 Request:', {
+    method: req.method,
+    path: req.path,
+    origin: req.headers.origin,
+    headers: {
+      'access-control-request-headers': req.headers['access-control-request-headers'],
+      'access-control-request-method': req.headers['access-control-request-method'],
+    }
+  });
   next();
 };

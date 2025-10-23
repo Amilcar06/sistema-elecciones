@@ -24,4 +24,6 @@ export const AUTH_CONFIG = {
   TOKEN_REFRESH_THRESHOLD: 5 * 60 * 1000, // 5 minutos antes de expirar
 } as const;
 
-console.log("🌐 API BASE URL:", import.meta.env.VITE_API_URL);
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
+console.log('🌐 API BASE URL:', API_BASE_URL);

@@ -47,8 +47,8 @@ export function PantallaRegistroCandidatos({ position, onUpdatePosition, onStart
       setLoading(true);
       const data = await listarCandidatos(position.id_cargo);
       setCandidatos(data);
-    } catch (error) {
-      console.error('Error cargando candidatos:', error);
+    } catch (err) {
+      console.error('Error cargando candidatos:', err);
     } finally {
       setLoading(false);
     }
@@ -106,8 +106,8 @@ export function PantallaRegistroCandidatos({ position, onUpdatePosition, onStart
       setCandidateName('');
       setNameError('');
       setIsDialogOpen(false);
-    } catch (error) {
-      console.error('Error creando candidato:', error);
+    } catch (err) {
+      console.error('Error creando candidato:', err);
       error('Error al crear candidato', 'No se pudo crear el candidato. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
@@ -143,8 +143,8 @@ export function PantallaRegistroCandidatos({ position, onUpdatePosition, onStart
       setNameError('');
       setEditingCandidate(null);
       setIsDialogOpen(false);
-    } catch (error) {
-      console.error('Error actualizando candidato:', error);
+    } catch (err) {
+      console.error('Error actualizando candidato:', err);
       error('Error al actualizar candidato', 'No se pudo actualizar el candidato. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
@@ -156,8 +156,8 @@ export function PantallaRegistroCandidatos({ position, onUpdatePosition, onStart
       setLoading(true);
       await eliminarCandidato(candidatoId);
       setCandidatos(prev => prev.filter(c => c.id_candidato !== candidatoId));
-    } catch (error) {
-      console.error('Error eliminando candidato:', error);
+    } catch (err) {
+      console.error('Error eliminando candidato:', err);
       error('Error al eliminar candidato', 'No se pudo eliminar el candidato. Inténtalo de nuevo.');
     } finally {
       setLoading(false);

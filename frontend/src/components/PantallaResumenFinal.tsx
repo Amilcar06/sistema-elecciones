@@ -196,7 +196,7 @@ export function PantallaResumenFinal({ election, onBack, onHome, onChangeElectio
               ) : (
                 <div className="grid gap-4">
                   {ganadores.map((ganador, index) => (
-                    <Card key={ganador.id_cargo} className="border-2 border-yellow-200 bg-gradient-to-r from-yellow-50 to-yellow-100 hover:shadow-lg transition-shadow">
+                    <Card key={`${ganador.id_cargo}-${ganador.id_candidato}-${index}`} className="border-2 border-yellow-200 bg-gradient-to-r from-yellow-50 to-yellow-100 hover:shadow-lg transition-shadow">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-4">

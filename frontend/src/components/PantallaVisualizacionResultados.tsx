@@ -161,52 +161,132 @@ export function PantallaVisualizacionResultados({
   // Obtener cargos completados para el panel lateral
   const completedPositions = resultadosPublicos.filter(c => c.ganador);
 
-  // Función para obtener el color de la barra
-  const getBarColor = (candidate: CandidatoResultado, isWinner: boolean | undefined) => {
+  // Función para obtener el color de la barra con diseño mejorado
+  const getBarColor = (candidate: CandidatoResultado, isWinner: boolean | undefined, index: number) => {
     if (isWinner) {
-      return 'bg-gradient-to-t from-yellow-400 to-yellow-300 border-yellow-500';
+      return 'bg-gradient-to-t from-amber-500 via-yellow-400 to-yellow-300 border-amber-600 shadow-lg shadow-amber-200';
     }
-    return 'bg-gradient-to-t from-blue-400 to-blue-300 border-blue-500';
+    
+    // Colores alternativos para diferentes posiciones
+    const colors = [
+      'bg-gradient-to-t from-emerald-500 via-green-400 to-green-300 border-emerald-600 shadow-lg shadow-emerald-200',
+      'bg-gradient-to-t from-blue-500 via-blue-400 to-blue-300 border-blue-600 shadow-lg shadow-blue-200',
+      'bg-gradient-to-t from-purple-500 via-purple-400 to-purple-300 border-purple-600 shadow-lg shadow-purple-200',
+      'bg-gradient-to-t from-pink-500 via-pink-400 to-pink-300 border-pink-600 shadow-lg shadow-pink-200',
+      'bg-gradient-to-t from-indigo-500 via-indigo-400 to-indigo-300 border-indigo-600 shadow-lg shadow-indigo-200'
+    ];
+    
+    return colors[index % colors.length];
   };
 
-  // Función para renderizar gráfico de barras
+  // Función para renderizar gráfico de barras horizontales (solo para admin)
   const renderBarChart = (candidates: CandidatoResultado[], winner: CandidatoResultado | undefined) => {
-    const maxVotes = Math.max(...candidates.map(c => c.votos));
+    const totalVotes = candidates.reduce((sum, c) => sum + c.votos, 0);
+    const sortedCandidates = [...candidates].sort((a, b) => b.votos - a.votos);
     
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {candidates.map((candidate) => {
-          const isWinner = winner && candidate.id_candidato === winner.id_candidato;
-          const barHeight = maxVotes > 0 ? (candidate.votos / maxVotes) * 100 : 0;
-          
-          return (
-            <div key={candidate.id_candidato} className="text-center">
-              <div className="relative h-64 flex flex-col justify-end mb-4">
-                {/* Barra vertical */}
-                <div 
-                  className={`w-full rounded-t-lg border-2 transition-all duration-1000 ease-out ${getBarColor(candidate, isWinner)}`}
-                  style={{ height: `${barHeight}%` }}
-                >
-                  {/* Valor en la barra */}
-                  <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-lg font-bold text-gray-800">
-                    {candidate.votos}
+      <div className="space-y-6">
+        {/* Header con estadísticas */}
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Resultados de Votación</h2>
+          <p className="text-gray-600">Total de votos: <span className="font-semibold text-blue-600">{totalVotes}</span></p>
+        </div>
+
+        {/* Lista de candidatos con barras horizontales */}
+        <div className="space-y-4">
+          {sortedCandidates.map((candidate, index) => {
+            const isWinner = winner && candidate.id_candidato === winner.id_candidato;
+            const barWidth = totalVotes > 0 ? (candidate.votos / totalVotes) * 100 : 0;
+            const position = index + 1;
+            
+            return (
+              <div 
+                key={candidate.id_candidato} 
+                className={`bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border-2 ${
+                  isWinner ? 'border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50' : 'border-gray-100'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  {/* Información del candidato */}
+                  <div className="flex items-center space-x-4 flex-1">
+                    {/* Posición */}
+                    <div className={`flex items-center justify-center w-12 h-12 rounded-full text-lg font-bold ${
+                      position === 1 ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-white' :
+                      position === 2 ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white' :
+                      position === 3 ? 'bg-gradient-to-r from-orange-400 to-orange-500 text-white' :
+                      'bg-gradient-to-r from-blue-400 to-blue-500 text-white'
+                    }`}>
+                      {position}
+                    </div>
+                    
+                    {/* Nombre y badge de ganador */}
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <h3 className={`text-2xl font-bold ${isWinner ? 'text-amber-700' : 'text-gray-800'}`}>
+                          {candidate.nombre_completo}
+                        </h3>
+                        {isWinner && (
+                          <div className="flex items-center space-x-1 bg-amber-100 px-3 py-1 rounded-full">
+                            <Trophy className="h-5 w-5 text-amber-600" />
+                            <span className="text-sm font-semibold text-amber-700">GANADOR</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Barra de progreso horizontal */}
+                      <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                        <div 
+                          className={`h-4 rounded-full transition-all duration-1000 ease-out ${
+                            isWinner 
+                              ? 'bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-400' 
+                              : candidate.votos > 0
+                                ? 'bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-400'
+                                : 'bg-gradient-to-r from-gray-300 to-gray-400'
+                          }`}
+                          style={{ width: `${Math.max(barWidth, candidate.votos === 0 ? 2 : 0)}%` }}
+                        >
+                          {/* Efecto de brillo */}
+                          <div className="h-full bg-gradient-to-r from-transparent via-white to-transparent opacity-30"></div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                
-                {/* Nombre del candidato */}
-                <div className="mt-4">
-                  <div className="flex items-center justify-center space-x-2">
-                    {isWinner && <Trophy className="h-5 w-5 text-yellow-500" />}
-                    <h3 className="font-bold text-lg">{candidate.nombre_completo}</h3>
+                  
+                  {/* Estadísticas */}
+                  <div className="text-right space-y-1">
+                    <div className="text-3xl font-bold text-gray-800">
+                      {candidate.votos}
+                    </div>
+                    <div className="text-lg text-gray-600">
+                      {candidate.porcentaje.toFixed(1)}%
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      votos
+                    </div>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    {candidate.porcentaje.toFixed(1)}%
-                  </p>
                 </div>
               </div>
+            );
+          })}
+        </div>
+
+        {/* Footer con estadísticas adicionales */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold text-blue-600">{candidates.length}</div>
+            <div className="text-sm text-blue-700">Candidatos</div>
+          </div>
+          <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold text-green-600">{candidates.reduce((sum, c) => sum + c.votos, 0)}</div>
+            <div className="text-sm text-green-700">Total Votos</div>
+          </div>
+          <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold text-purple-600">
+              {candidates.length > 0 ? (candidates.reduce((sum, c) => sum + c.votos, 0) / candidates.length).toFixed(1) : 0}
             </div>
-          );
-        })}
+            <div className="text-sm text-purple-700">Promedio</div>
+          </div>
+        </div>
       </div>
     );
   };
