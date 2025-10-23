@@ -36,7 +36,8 @@ export async function crearCandidato(
   activo = true
 ): Promise<Candidato> {
   try {
-    const data = { id_cargo, nombre_completo, activo };
+    // El backend espera 'nombre' pero nosotros usamos 'nombre_completo' en el frontend
+    const data = { id_cargo, nombre: nombre_completo, activo };
     return await apiClient.post<Candidato>('/candidatos', data);
   } catch (error) {
     console.error('Error en crearCandidato:', error);
@@ -52,7 +53,8 @@ export async function actualizarCandidato(
   activo = true
 ): Promise<Candidato> {
   try {
-    const data = { nombre_completo, activo };
+    // El backend espera 'nombre' pero nosotros usamos 'nombre_completo' en el frontend
+    const data = { nombre: nombre_completo, activo };
     return await apiClient.put<Candidato>(`/candidatos/${id_candidato}`, data);
   } catch (error) {
     console.error('Error en actualizarCandidato:', error);

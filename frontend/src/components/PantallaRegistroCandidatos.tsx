@@ -217,15 +217,12 @@ export function PantallaRegistroCandidatos({ position, onUpdatePosition, onStart
                     Agregar Candidato
                   </Button>
                 </DialogTrigger>
-                <DialogContent aria-describedby="candidate-dialog-description">
+                <DialogContent>
                   <DialogHeader>
                     <DialogTitle>
                       {editingCandidate ? 'Editar Candidato' : 'Agregar Nuevo Candidato'}
                     </DialogTitle>
                   </DialogHeader>
-                  <p id="candidate-dialog-description" className="sr-only">
-                    {editingCandidate ? 'Edita la información del candidato seleccionado' : 'Ingresa la información del nuevo candidato para este cargo'}
-                  </p>
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="candidate-name">Nombre Completo</Label>

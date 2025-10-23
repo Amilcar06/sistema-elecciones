@@ -11,74 +11,37 @@ import {
   Usuario
 } from '../api/types';
 
+// Funciones de utilidad para compatibilidad (deprecated - usar authService)
 export async function login(email: string, password: string): Promise<LoginResponse> {
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ email, password }),
-  });
-
-  if (!response.ok) {
-    throw new Error('Error en login');
-  }
-
-  return response.json();
+  return authService.login(email, password);
 }
 
 export async function refreshToken(refreshToken: string): Promise<LoginResponse> {
-  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ refreshToken }),
-  });
-
-  if (!response.ok) {
+  // Esta función wrapper debería usar el refreshToken pasado como parámetro
+  // pero authService.refreshToken() obtiene el token del localStorage
+  // Por consistencia, actualizamos el localStorage primero
+  localStorage.setItem(AUTH_CONFIG.REFRESH_TOKEN_KEY, refreshToken);
+  
+  const result = await authService.refreshToken();
+  if (!result) {
     throw new Error('Error refreshing token');
   }
-
-  return response.json();
+  // Convertir el resultado al formato LoginResponse esperado
+  return {
+    message: 'Token refreshed successfully',
+    token: result.token,
+    refreshToken: result.refreshToken,
+    usuario: await authService.getMe().then(data => data.usuario)
+  };
 }
 
 export async function getMe(): Promise<Usuario> {
-  const token = localStorage.getItem('token');
-  
-  if (!token) {
-    throw new Error('No token found');
-  }
-
-  const response = await fetch(`${API_BASE_URL}/auth/me`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error('Error obteniendo información del usuario');
-  }
-
-  return response.json();
+  const result = await authService.getMe();
+  return result.usuario;
 }
 
 export async function logout(): Promise<void> {
-  const token = localStorage.getItem('token');
-  
-  if (!token) return;
-
-  try {
-    await fetch(`${API_BASE_URL}/auth/logout`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-  } finally {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-  }
+  return authService.logout();
 }
 
 // Servicio de autenticación
@@ -142,7 +105,7 @@ export const authService = {
    */
   verifyToken: async (): Promise<boolean> => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001/api'}/auth/validate-token`, {
+      const response = await fetch(`${API_BASE_URL}/auth/validate-token`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -178,7 +141,7 @@ export const authService = {
         return null;
       }
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001/api'}/auth/refresh`, {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

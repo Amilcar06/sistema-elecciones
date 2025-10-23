@@ -118,6 +118,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         } catch (refreshError) {
           console.error('Error refrescando token:', refreshError);
+          // Si el refresh falla, limpiar todo
+          authService.clearAuth();
         }
       }
       
