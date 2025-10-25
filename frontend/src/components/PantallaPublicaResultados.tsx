@@ -191,63 +191,146 @@ export function PantallaPublicaResultados({
   };
 
 
-  // Función para renderizar gráfico de barras con estados
+  // Función para obtener el color de la barra vertical
+  const getBarColor = (candidate: CandidatoResultado, isWinner: boolean | undefined, index: number) => {
+    if (isWinner) {
+      return 'bg-gradient-to-t from-amber-500 via-yellow-400 to-yellow-300 border-amber-600 shadow-lg shadow-amber-200';
+    }
+    
+    // Colores alternativos para diferentes posiciones
+    const colors = [
+      'bg-gradient-to-t from-emerald-500 via-green-400 to-green-300 border-emerald-600 shadow-lg shadow-emerald-200',
+      'bg-gradient-to-t from-blue-500 via-blue-400 to-blue-300 border-blue-600 shadow-lg shadow-blue-200',
+      'bg-gradient-to-t from-purple-500 via-purple-400 to-purple-300 border-purple-600 shadow-lg shadow-purple-200'
+    ];
+    
+    return colors[index % colors.length];
+  };
+
+  // Función para renderizar gráfico de barras verticales (solo para público)
   const renderBarChart = (candidates: CandidatoResultado[], winner: CandidatoResultado | undefined, estado: string) => {
     if (candidates.length === 0) {
       return (
         <div className="text-center py-16">
-          <p className="text-2xl text-gray-500">
-            {estado === 'sin_candidatos' ? 'Sin candidatos registrados' : 
-             estado === 'preparando' ? 'Preparando votación...' : 
-             'Esperando resultados...'}
-          </p>
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-12">
+            <div className="text-6xl mb-4">📊</div>
+            <p className="text-2xl text-gray-500 mb-2">
+              {estado === 'sin_candidatos' ? 'Sin candidatos registrados' : 
+               estado === 'preparando' ? 'Preparando votación...' : 
+               'Esperando resultados...'}
+            </p>
+            <p className="text-gray-400">Los resultados aparecerán aquí cuando estén disponibles</p>
+          </div>
         </div>
       );
     }
 
-    const maxVotes = Math.max(...candidates.map(c => c.votos), 1); // Mínimo 1 para evitar división por 0
+    const totalVotes = candidates.reduce((sum, c) => sum + c.votos, 0);
+    const sortedCandidates = [...candidates].sort((a, b) => b.votos - a.votos);
     
     return (
       <div className="space-y-6">
-        {candidates.map((candidate) => {
-          const isWinner = winner && candidate.id_candidato === winner.id_candidato;
-          const barWidth = maxVotes > 0 ? (candidate.votos / maxVotes) * 100 : 0;
-          
-          return (
-            <div key={candidate.id_candidato} className="space-y-2">
-              {/* Nombre del candidato y votos */}
-              <div className="flex justify-between items-center">
-                <h3 className={`text-2xl font-bold ${isWinner ? 'text-green-700' : 'text-gray-800'}`}>
-                  {isWinner && '🏆 '}{candidate.nombre_completo}
-                </h3>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-gray-800">
-                    {candidate.votos}
-                  </div>
-                  {candidate.votos > 0 && (
-                    <div className="text-lg text-gray-600">
-                      {candidate.porcentaje.toFixed(1)}%
+        {/* Header con estadísticas */}
+        <div className="text-center mb-8">
+          <p className="text-gray-600">Total de votos: <span className="font-semibold text-blue-600">{totalVotes}</span></p>
+        </div>
+
+        {/* Gráfico de barras verticales - optimizado para 2-3 candidatos */}
+        <div className={`grid gap-8 ${
+          candidates.length === 2 ? 'grid-cols-1 md:grid-cols-2' : 
+          candidates.length === 3 ? 'grid-cols-1 md:grid-cols-3' : 
+          'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+        }`}>
+          {sortedCandidates.map((candidate, index) => {
+            const isWinner = winner && candidate.id_candidato === winner.id_candidato;
+            const barHeight = totalVotes > 0 ? (candidate.votos / totalVotes) * 100 : 0;
+            const position = index + 1;
+            
+            return (
+              <div 
+                key={candidate.id_candidato} 
+                className={`relative group transition-all duration-300 hover:scale-105 ${
+                  isWinner ? 'ring-4 ring-amber-200 ring-opacity-50' : ''
+                }`}
+              >
+                {/* Card container */}
+                <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100">
+                  {/* Posición y medalla */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
+                      position === 1 ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-white' :
+                      position === 2 ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white' :
+                      position === 3 ? 'bg-gradient-to-r from-orange-400 to-orange-500 text-white' :
+                      'bg-gradient-to-r from-blue-400 to-blue-500 text-white'
+                    }`}>
+                      {position}
                     </div>
-                  )}
+                    {isWinner && (
+                      <div className="flex items-center space-x-1">
+                        <span className="text-2xl">🏆</span>
+                        <span className="text-xs font-semibold text-amber-600">GANADOR</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Barra vertical mejorada */}
+                  <div className="relative h-64 flex flex-col justify-end mb-6">
+                    <div className="relative w-full h-full flex flex-col justify-end">
+                      {/* Barra principal */}
+                      <div 
+                        className={`w-full rounded-t-2xl border-2 transition-all duration-1000 ease-out ${getBarColor(candidate, isWinner, index)}`}
+                        style={{ 
+                          height: `${Math.max(barHeight, candidate.votos === 0 ? 0 : 5)}%`,
+                          minHeight: candidate.votos === 0 ? '0px' : '20px'
+                        }}
+                      >
+                        {/* Efecto de brillo en la barra */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white opacity-20 rounded-t-2xl"></div>
+                      </div>
+                      
+                      {/* Valor de votos con animación - solo mostrar si hay votos */}
+                      {candidate.votos > 0 && (
+                        <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 z-10">
+                          <div className="bg-white rounded-full px-3 py-1 shadow-lg border-2 border-gray-200">
+                            <span className="text-lg font-bold text-gray-800">{candidate.votos}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Información del candidato */}
+                  <div className="text-center space-y-2">
+                    <h3 className="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition-colors">
+                      {candidate.nombre_completo}
+                    </h3>
+                    
+                    {/* Porcentaje con barra de progreso horizontal */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-center space-x-2">
+                        <span className="text-2xl font-bold text-gray-700">
+                          {candidate.porcentaje.toFixed(1)}%
+                        </span>
+                      </div>
+                      
+                      {/* Barra de progreso horizontal */}
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full transition-all duration-1000 ease-out ${
+                            isWinner 
+                              ? 'bg-gradient-to-r from-amber-400 to-amber-500' 
+                              : 'bg-gradient-to-r from-blue-400 to-blue-500'
+                          }`}
+                          style={{ width: `${candidate.porcentaje}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              
-              {/* Barra horizontal */}
-              <div className="w-full bg-gray-200 rounded-full h-8">
-                <div 
-                  className={`h-8 rounded-full transition-all duration-1000 ease-out ${
-                    isWinner 
-                      ? 'bg-gradient-to-r from-green-500 to-green-400' 
-                      : candidate.votos > 0
-                        ? 'bg-gradient-to-r from-blue-500 to-blue-400'
-                        : 'bg-gradient-to-r from-gray-300 to-gray-200'
-                  }`}
-                  style={{ width: `${Math.max(barWidth, candidate.votos === 0 ? 5 : 0)}%` }}
-                ></div>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     );
   };

@@ -19,12 +19,20 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevenir múltiples submits simultáneos
+    if (isSubmitting || loading) {
+      return;
+    }
+    
     setLoading(true);
+    setIsSubmitting(true);
     setError('');
 
     try {
@@ -56,6 +64,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
       setError('Error de conexión. Intenta nuevamente.');
     } finally {
       setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -139,10 +148,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={loading}
+                disabled={loading || isSubmitting}
                 aria-describedby="login-status"
               >
-                {loading ? (
+                {loading || isSubmitting ? (
                   <>
                     <ButtonLoadingSpinner size="sm" />
                     Iniciando sesión...

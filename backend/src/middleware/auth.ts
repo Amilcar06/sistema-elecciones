@@ -29,30 +29,20 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
     
-    // Verificar que el usuario existe y está activo
-    const usuario = await prisma.usuario.findFirst({
-      where: {
-        id_usuario: decoded.id_usuario,
-        estado: 'ACTIVO',
-        deleted_at: null
-      }
-    });
-
-    if (!usuario) {
-      return res.status(401).json({ error: 'Usuario no válido o inactivo' });
-    }
-
-    // Verificar que la sesión existe y no ha expirado
+    // Verificar usuario y sesión en una sola consulta optimizada
     const sesion = await prisma.sesion.findFirst({
       where: {
         token,
-        id_usuario: usuario.id_usuario,
-        expires_at: {
-          gt: new Date()
-        },
-        absolute_expiry: {
-          gt: new Date()
+        id_usuario: decoded.id_usuario,
+        expires_at: { gt: new Date() },
+        absolute_expiry: { gt: new Date() },
+        usuario: {
+          estado: 'ACTIVO',
+          deleted_at: null
         }
+      },
+      include: {
+        usuario: true
       }
     });
 
@@ -66,40 +56,38 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
 
     const now = new Date();
     
-    // Implementar sliding window: extender la sesión por 1 hora desde el último acceso
-    // pero no más allá del límite absoluto de 7 días
-    const lastActivity = sesion.last_activity;
-    const hoursSinceLastActivity = (now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60);
+    // Solo actualizar si han pasado más de 5 minutos (reducir frecuencia de actualizaciones)
+    const minutesSinceLastActivity = (now.getTime() - sesion.last_activity.getTime()) / (1000 * 60);
     
-    // Si han pasado más de 30 minutos desde la última actividad, extender la sesión
-    if (hoursSinceLastActivity >= 0.5) {
-      const newExpiry = new Date(now.getTime() + (60 * 60 * 1000)); // 1 hora desde ahora
-      
-      // No extender más allá del límite absoluto
-      const finalExpiry = newExpiry > sesion.absolute_expiry ? sesion.absolute_expiry : newExpiry;
-      
-      await prisma.sesion.update({
-        where: { id_sesion: sesion.id_sesion },
-        data: {
-          expires_at: finalExpiry,
-          last_activity: now
-        }
+    if (minutesSinceLastActivity >= 5) {
+      // Usar transacción para operaciones atómicas
+      await prisma.$transaction(async (tx) => {
+        const newExpiry = new Date(now.getTime() + (60 * 60 * 1000)); // 1 hora desde ahora
+        const finalExpiry = newExpiry > sesion.absolute_expiry ? sesion.absolute_expiry : newExpiry;
+        
+        await tx.sesion.update({
+          where: { id_sesion: sesion.id_sesion },
+          data: {
+            expires_at: finalExpiry,
+            last_activity: now
+          }
+        });
+
+        // Actualizar último acceso del usuario (menos frecuente)
+        await tx.usuario.update({
+          where: { id_usuario: sesion.usuario.id_usuario },
+          data: { ultimo_acceso: now }
+        });
       });
     }
 
-    // Actualizar último acceso del usuario
-    await prisma.usuario.update({
-      where: { id_usuario: usuario.id_usuario },
-      data: { ultimo_acceso: now }
-    });
-
     req.usuario = {
-      id_usuario: usuario.id_usuario,
-      email: usuario.email,
-      nombre: usuario.nombre,
-      apellido: usuario.apellido,
-      rol: usuario.rol,
-      estado: usuario.estado
+      id_usuario: sesion.usuario.id_usuario,
+      email: sesion.usuario.email,
+      nombre: sesion.usuario.nombre,
+      apellido: sesion.usuario.apellido,
+      rol: sesion.usuario.rol,
+      estado: sesion.usuario.estado
     };
 
     next();
@@ -120,10 +108,10 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
         message: 'Token de autenticación no válido.' 
       });
     } else {
-      return res.status(403).json({ 
-        error: 'Error de autenticación', 
-        code: 'AUTH_ERROR',
-        message: 'Error interno de autenticación.' 
+      return res.status(401).json({ 
+        error: 'Sesión inválida', 
+        code: 'SESSION_INVALID',
+        message: error instanceof Error ? error.message : 'Error de autenticación.' 
       });
     }
   }
